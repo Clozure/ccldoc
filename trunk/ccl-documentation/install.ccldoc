@@ -1,0 +1,661 @@
+
+(chapter "Obtaining, Installing, and Running {CCL}"
+  (defsection "Releases and System Requirements"
+    "As of this writing, {CCL} 1.7 is the latest release; it was
+    made in August 2011.  For up-to-date information about releases,
+    please see {link http://ccl.clozure.com/}.
+    
+
+{CCL} 1.7 runs on the following platforms:"
+    (listing :bullet
+      (item "Linux (x86, x86-64, ppc32, ppc64, armv7)")
+      (item "Mac OS X 10.5 and later (x86, x86-64)")
+      (item "FreeBSD 6.x and later (x86, x86-64)")
+      (item "Solaris (x86, x86-64)")
+      (item "Microsoft Windows XP and later (x86, x86-64)"))
+    (defsection "32- vs 64-bit versions"
+      (para "Naturally, 64-bit versions of {CCL} require 64-bit processors, 
+      for example, a G5 or Core 2.  Some early Intel-based Macintoshes
+      used processors that don't support
+      64-bit operation, so the 64-bit {CCL} will not run on them, although
+      the 32-bit {CCL} will.
+      "))
+    (defsection "32-bit x86 versions require SSE2"
+      (para "The 32-bit x86 versions of {CCL} depend on the presence of the SSE2 instructions.
+      Most x86 processors manufactured and sold in the last several years support SSE2 (all Apple Intel-based Macs do, for instance),
+      but there are some exceptions.
+      The {link http://en.wikipedia.org/wiki/SSE2 Wikipedia article on SSE2} lists processor models that support SSE2
+      (and also mentions some of the more notable exceptions).
+      "))
+    (defsection "LinuxPPC"
+      (para "{CCL} requires version 2.2.13 (or later) of the Linux
+      kernel and version 2.1.3 (or later) of the GNU C library (glibc)
+      at a bare minimum."))
+    (defsection "Linux x86"
+      (para #:|
+	Because of the nature of Linux distributions, it's difficult
+	to give precise version number requirements.  In general, a
+	"fairly modern" (no more than 2 or three years old) kernel and
+	C library are more likely to work well than older
+	versions.|))
+    (defsection "Linux ARM v7"
+      #:|The Linux ARM port is relatively new and is still a work-in-progress.
+      {CCL}
+needs some features (such as hardware floating-point, locking and
+memory-serialization primitives) that are only found in chips
+that implement architecture version 7 (ARMv7); technically, it needs
+the ARMv7 "application profile", which is sometimes called ARMv7a.
+
+In practice, {emphasis most} ARM consumer devices released in the last few
+years implement ARMv7, but there are exceptions, and it is 
+not practical to enumerate all of the ARM devices that CCL should
+run on.
+      
+
+
+In addition to hardware issues, {CCL} expects Linux to run in little-endian
+mode and expects software to follow "soft float" calling conventions.
+The latter has to do with how C functions accept floating-point arguments
+and return floating-point values.
+|)
+    (defsection "FreeBSD x86"
+      (para #:|{CCL} should run on
+    FreeBSD 6.x and 7.x.
+    FreeBSD 7 users will need to install the "compat6x" package in order to use
+    the distributed {CCL} kernel, which is built on a FreeBSD 6.x system.|))
+    (defsection "Mac OS X x86"
+      " {CCL} 1.7 runs on Mac OS X (x86) versions 10.5 and later, including 10.7 (Lion),
+      
+
+ {CCL} 1.6 runs on Mac OS X PPC as well as x86 processors.")
+    (defsection "Microsoft Windows"
+      (para "
+      For {CCL} versions prior to 1.7, the 32-bit executable does not run under 64-bit Windows.
+    ")))
+  (defsection "Obtaining {CCL}"
+    "There are three ways to obtain {CCL}.  For Mac OS X,
+    there are disk images that can be used to install {CCL} in
+    the usual Macintosh way. For other OSes, Subversion is the best
+    way to obtain {CCL}.  Mac OS X users can also use Subversion
+    if they prefer. Tarballs are available for those who prefer them,
+    but if you have Subversion installed, it is simpler and more
+    flexible to use Subversion than tarballs.
+    
+
+ There are three popular ways to use {CCL}: as a
+      stand-alone double-clickable application (Mac OS X only), as a
+      command-line application, or with Emacs and SLIME.
+    
+
+The following sections describe these options."
+    (defsection "The Mac Way"
+      "If you are using Mac OS X then you can install and use
+         {CCL} in the usual Macintosh way.  Download and mount a
+         disk image, then drag the ccl folder to the Applications folder
+	 or wherever you wish.
+         After that you can double-click the Clozure CL application found
+	 inside the ccl directory.  The disk images for version 1.7 are available at
+         {link ftp://clozure.com/pub/release/1.7/}
+
+        So that {CCL} can locate its source code, and for other
+        reasons explained in
+        {section Predefined Logical Hosts}, you keep the
+        Clozure CL application
+        in the {code ccl} directory.  If you use a shell,
+        you can set the value of the
+        {system CCL_DEFAULT_DIRECTORY} environment variable
+        to explicitly indicate the location of
+        the {code ccl} directory. If you choose to do
+        that, then the {code ccl} directory and the Clozure CL
+        application can each be in any location you find
+        convenient.")
+    (defsection "Tarballs"
+      (para "Tarball distributions of {CCL} release version 1.7 are available at
+      {link ftp://clozure.com/pub/release/1.7/}.
+      Download and extract
+      one on your local disk.  Then edit the {CCL} shell script to set
+      the value of {system CCL_DEFAULT_DIRECTORY} and start
+      up the appropriate {CCL} kernel. See {section The ccl Shell Script} for more information about the
+      {CCL} shell scripts."))
+    (defsection "Getting {CCL} with Subversion"
+      (para "It is very easy to download and configure {CCL} to obtain sources from the Subversion repository.
+      This is the preferred way to get either the
+      latest, or a specific version of {CCL}, unless you prefer
+      the Mac Way.  Subversion is a source code control system that is
+      in wide use.  Many OSes come with Subversion
+      pre-installed. A complete, buildable and runnable set of {CCL}
+      sources and binaries can be retrieved with a single Subversion command.
+      ")
+      (block "Note"
+        "Unless stated otherwise, examples in this chapter are given for Mac OS X in particular
+        or Unix-based host environments in general.
+        
+
+        For Windows, special care must be taken to install a working development environment.
+        For more information see the {CCL} Wiki at URL: {link http://trac.clozure.com/ccl/wiki/WindowsNotes}")
+      (defsection "Checking Subversion Installation"
+        (para "Make sure that Subversion is installed on your system.  Bring up a command
+      line shell and type:
+        "
+         (code-block "
+shell> svn")
+         " 
+        If Subversion is installed, you will see something like:
+        "
+         (code-block "
+Type 'svn help' for usage")
+         "
+        If Subversion is not installed, you will see something
+        like:
+        "
+         (code-block "
+-bash: svn: command not found")
+         "
+        If Subversion is not installed, you'll need to figure out how
+        to install it on your OS. You can find information about
+        obtaining and installing Subversion at
+        the {link http://subversion.tigris.org Subversion
+        web page}."))
+      (defsection "Downloading {CCL} Using Subversion"
+        (para "Before you download {CCL} you should consider:
+      Do you want to run the most recent source code, or the current stable release version?
+      If you don't know how to answer this question, then you probably want the release version.
+      ")
+        (defsection "Downloading the Trunk"
+          #:|Day-to-day development of {CCL} takes place in an area
+      of the Subversion repository known as "the trunk".  At most times,
+      the trunk is perfectly usable, but occasionally it can be unstable
+      or totally broken.
+      If you wish to live on the bleeding edge, download sources from the trunk.
+      
+
+ For example, the following command will fetch a copy of the trunk
+      for Mac OS X (Darwin) with x86 processors (both 32- and 64-bit versions):
+      |
+          (code-block "svn co http://svn.clozure.com/publicsvn/openmcl/trunk/darwinx86/ccl
+         ")
+          (para #:|
+	  To get a trunk {CCL} for another platform, replace
+	  "darwinx86" with one of the following names (all versions
+	  include both 32- and 64-bit binaries):
+	|)
+          (listing :bullet
+            (item "darwinx86")
+            (item "linuxx86")
+            (item "freebsdx86")
+            (item "solarisx86")
+            (item "windows")
+            (item "linuxppc")
+            (item "darwinppc")))
+        (defsection "Downloading a Release Version"
+          (para "Release versions of {CCL} are intended to be stable.  While
+	bugs will be fixed in the release branches, enhancements
+	and new features will go into the trunk.
+        If you wish to run the stable release,
+        the following command will fetch a copy of the release version 1.7
+	for Mac OS X (Darwin) with x86 processors (both 32- and 64-bit versions):
+        ")
+          (code-block "svn co http://svn.clozure.com/publicsvn/openmcl/release/1.7/darwinx86/ccl
+          ")
+          (para #:|To get the release version of {CCL}  for another platform,
+	replace "darwinx86" with one of the following names:
+        |)
+          (listing :bullet
+            (item "darwinx86")
+            (item "linuxx86")
+            (item "freebsdx86")
+            (item "solarisx86")
+            (item "windows")
+            (item "linuxppc")
+            (item "darwinppc"))
+          (para #:|These distributions contain complete sources and
+        binaries. They use Subversion's "externals" features to share
+        common sources; the majority of source code is the same across
+        all versions.|))))
+    (defsection "Rebuilding {CCL} From Sources"
+      #:|This section explains how to peform a "full rebuild" of {CCL} from a source distribution.
+
+    After downloading {CCL} sources, you should rebuild {CCL} as described here.
+    At the start of a full rebuild, object files in the {code ccl} directory are deleted,
+    which causes the build script to recompile the runtime kernel (C code) and high-level sources (Lisp),
+    then save a new heap image.
+    Doing a full rebuild helps to ensure that your local installation will run properly for your host OS environment.
+    |
+      (para "In an interactive shell, a command sequence like the following will rebuild {CCL} in place:
+
+    "
+       (code-block "
+joe> cd {sample /path/to/installed/ccl}
+joe:ccl> ./{sample kernel-filename} --no-init
+Welcome to Clozure Common Lisp Version [...]
+? (rebuild-ccl :full t)
+<...lots of compilation output...>
+? (quit)
+joe:ccl>
+    "))
+      "Replace {sample /path/to/installed/ccl} with the path of the {code ccl} directory
+    that you downloaded.
+
+    Replace {sample kernel-filename} with the filename of the Lisp kernel program.
+    To find the filename of a Lisp kernel image for your particular platform, see {section Platform-specific filename conventions}.
+    
+
+    Specifying the {code --no-init} option ensures that personal initializations do not interfere
+    with rebuilding {CCL}.
+    "
+      (para "The rest of this section covers the following topics in brief:
+    "
+       (listing :bullet
+         (item (ref (section "Software Requirements for Building {CCL}") "Software prerequisites"))
+         (item (ref (section "When to Rebuild {CCL} From Sources") "When to run the build process"))
+         (item (ref (section "Rebuilding {CCL} Using REBUILD-CCL") "Using {code ccl-rebuild}"))
+         (item (ref (section "Summary of the Build Process Steps") "What happens during the full rebuild process"))))
+      (block "Note"
+        (para "This section does {emphasis not} provide comprehensive documentation on the build process.
+    Please refer to {chapter Building {CCL} from its Source Code} for more information.
+    Those more detailed instructions are used mainly by developers who maintain, customize, and/or port {CCL}.
+    If you are customizing {CCL}, or if you run into some exceptional situation,
+    you may need to perform the individual build steps.
+    "))
+      (defsection "Software Requirements for Building {CCL}"
+        (para "In order to build {CCL} you must have a working system and development environment.
+    There are different requirements and setup procedures for each platform, but the main requirement is to have
+    a C compiler and a few other utilities:
+    GNU {code gcc} or {code cc} with {code ld} and {code as};
+    {code make}; and {code m4}.
+    Please refer to {chapter Building {CCL} from its Source Code} for details.
+    ")
+        (block "Note"
+          (para "If you don't have the prerequisite C compiler toolchain installed, {code rebuild-ccl} will not work.
+    See {section Kernel Build Prerequisites} for additional details.
+    "))
+        (para "Most distributions of Linux have all or most of the required development tools either pre-installed
+    or readily available.
+    On Debian-based Linux you can download and install the essential build tools using the package manager.
+    For example: "
+         (code-block "apt-get install build-essential") "
+    (You may need to install C header files separately.)
+    ")
+        "For Mac OS X, Xcode 4 is available from the App Store.
+
+    For Windows, install Cygwin and the MinGW toolchain for the 32- or 64-bit OS.
+    More information about installing {CCL} on Windows is available in the {CCL} Wiki
+    at URL: {link http://trac.clozure.com/ccl/wiki/WindowsNotes}")
+      (defsection "When to Rebuild {CCL} From Sources"
+        "The most common scenario that requires a full rebuild is the standard installation after downloading the source tree.
+    Users and application developers (who otherwise have no special build requirements)
+    will generally need to run the full rebuild process just once
+    for any given installation on a particular host system.
+    
+
+    Another common scenario is installing a patch update:
+    You can use Subversion ({code svn update}) to download a more recent set of source files.
+    (Be sure to download sources from the same path and branch in the source repository.)
+    Then run a full rebuild to create new kernel and heap images.
+    If you are running {CCL} from the trunk, you may need to update sources and run the full rebuild more often.
+    
+
+    Another reason to do a full rebuild is to ensure that {CCL} will run properly in the host OS environment.
+    This may be necessary, for example, when the target OS version
+    is not identical to the one where the pre-built kernel was generated.
+    The Lisp kernel uses some functionality defined in standard platform-provided libraries.
+    On some platforms, applications (such as the Lisp kernel) are built in
+    such a way as to depend on the specific versions of these libraries that were
+    present at build time, and may not run on systems that have older or newer versions
+    of these libraries.
+    If you're affected by this, the simplest workaround is to build the Lisp kernel
+    on the machine(s) that you intend to run it on and use that locally-built kernel instead of one distributed via Subversion.
+    ")
+      (defsection "Rebuilding {CCL} Using REBUILD-CCL"
+        (para "Once the checkout is complete, and provided that you have a working development setup,
+    you can build {CCL} by running the Lisp kernel (an OS-native executable program)
+    and running {function rebuild-ccl} in Lisp.
+    ")
+        (para "For example, to build a 64-bit {CCL} on Mac OS X: 
+
+    "
+         (code-block #:|
+joe:ccl> ./dx86cl64 --no-init
+Welcome to Clozure Common Lisp Version 1.7  (DarwinX8664)!
+? (rebuild-ccl :full t)
+Rebuilding Clozure Common Lisp using Version 1.7  (DarwinX8664)
+;Building lisp-kernel ...
+;Kernel built successfully.
+;Compiling <...>
+;Loading <...>
+
+<...lots of compilation output...>
+
+;Wrote bootstrapping image: #P"/Users/joe/ccl/x86-boot64.image"
+;Wrote heap image: #P"/Users/joe/ccl/dx86cl64.image"
+NIL
+? (quit)
+joe:ccl>|))
+        (para "If the build fails for any reason, the kernel and/or heap image files may be missing or corrupted.
+    To recover, delete the image files and update the source directory from Subversion.
+    For example:
+
+    "
+         (code-block "
+joe:ccl> rm dx86cl*
+joe:ccl> svn update
+<... lots of Subversion output...>
+joe:ccl> ./dx86cl64 --no-init
+Welcome to Clozure Common Lisp Version 1.7  (DarwinX8664)!
+? (rebuild-ccl :full t)
+<... lots of compilation output...>
+? (quit)
+joe:ccl> 
+"))
+        (para "Once the full rebuild is completed, you can run the new Lisp kernel from the command shell.
+    However, running the OS- and processor-specific executable directly is not recommended
+    for day-to-day use.
+    {CCL} includes the {code ccl} and {code ccl64} command shell scripts.
+    For details on configuring a shell script for your environment, see {section The ccl Shell Script}.
+    "))
+      (defsection "Summary of the Build Process Steps"
+        (para "Should the build fail, your first concern should be to confirm that all requirements are in place:
+    the C compiler, utilities, and OS header files;
+    source files for the trunk or release branch you want to build;
+    and the Lisp kernel and heap image files.
+    For assistance with trouble-shooting, here is an outline of the full build process,
+    with links to the more detailed instructions in {chapter Building {CCL} from its Source Code}.
+    "
+         (listing :bullet
+           (item "Build the Lisp kernel ({section Building the Kernel})")
+           (item (para "Build the heap image ({section Building the Heap Image})")
+            (listing :bullet
+              (item "Create a bootstrapping heap image ({section Generating a bootstrapping image})")
+              (item "Compile Lisp code to generate fasl files ({section Generating fasl files})")
+              (item
+               (para "Build a full image from bootstrapping image
+        ({section Building a full image from a bootstrapping image})")
+               (listing :bullet
+                 (item "Run new kernel with new bootstrapping image")
+                 (item "Load Lisp code")
+                 (item "Save a new full heap image"))))))))))
+  (defsection "Command Line Set Up"
+    (para "Sometimes it's convenient to use {CCL} from a Unix
+      shell command line.  This is especially true when using {CCL}
+      as a way to run Common Lisp utilities.")
+    (defsection "The ccl Shell Script"
+      (para "{CCL} needs to be able to find the
+        {code ccl} directory in order to support features
+        such as {code require} and
+        {code provide}, access to foreign interface
+        information (see {section The Interface Database}) and the Lisp build process (see
+        "
+       (ref (chapter "Building {CCL} from its Source Code") "Building {CCL} from its Source
+        Code")
+       #:|). Specifically, it needs to set up logical
+        pathname translations for the {code "ccl:"}
+        logical host.  If this logical host isn't defined (or isn't
+        defined correctly), some things might work, some things might
+        not, and it'll generally be hard to invoke and use {CCL}
+        productively.|)
+      #:|{CCL} uses the value of the environment variable
+        {code CCL_DEFAULT_DIRECTORY} to determine the
+        filesystem location of the {code ccl} directory;
+        the ccl shell script is intended to provide a way to
+        invoke {CCL} with that environment variable set
+        correctly.
+
+        There are two versions of the shell script:
+        {code "ccl/scripts/ccl"} is used to invoke
+        32-bit implementations of {CCL} and
+        {code "ccl/scripts/ccl64"} is used to invoke
+        64-bit implementations.
+        Install one script or the other or both as needed.
+      
+
+To use the script:|
+      (listing :number
+        (item "Copy the script to a directory that is on your
+	  {system PATH}.  This is often
+	  {code /usr/local/bin} or
+	  {code ~/bin}.  It is better to do this than to
+	  add {code ccl/scripts} to your
+	  {system PATH}, because the script needs to be edited,
+	  and editing it in-place means that Subversion sees the script as
+	  modified..")
+        (item "Edit the definition of
+            {code CCL_DEFAULT_DIRECTORY} near the
+            beginning of the shell script so that it refers to
+            your {code ccl} directory.  Alternately, set
+            the value of the {code CCL_DEFAULT_DIRECTORY}
+            environment variable
+            wherever you usually set per-user environment variables, in your
+            {code .cshrc}, {code .tcshrc},
+            {code .bashrc}, {code .bash_profile},
+            or {code .MacOSX/environment.plist} script,
+            or system-wide in {code /etc/profile} or {code /etc/bashrc}.
+            When the ccl script runs, if the process environment contains
+            a definition of {code CCL_DEFAULT_DIRECTORY}, the ccl
+            script will not override it.
+	  ")
+        (item "Ensure that the shell script is executable, for
+            example:
+
+            {code $ chmod +x
+            ~/ccl/ccl/scripts/ccl64}"
+         (para #:|This command grants execute permission to the named
+            script. If you are using a 32-bit platform, substitute
+            "ccl" in place of "ccl64".
+            |
+          (block "Warning"
+            #:|The above command won't work if you are not the
+	            owner of the installed copy of {CCL}. In that case,
+	            you can use the "sudo" command like this:
+
+                  {code $ sudo chmod +x
+                  ~/ccl/ccl/scripts/ccl64}
+
+Give your password when prompted.
+
+                If the "sudo" command doesn't work, then you are
+                not an administrator on the system you're using, and you
+                don't have the appropriate "sudo" permissions. In that
+                case you'll need to get help from the system's
+                administrator.|))))
+      (para #:|Note that most people won't need both
+      {code ccl} and {code ccl64} scripts.
+      You only need both if you sometimes run 32-bit {CCL} and
+      sometimes run 64-bit {CCL}.  You can rename the script that
+      you use to whatever you want.  For example, if you are on a
+      64-bit system, and you only use {CCL} in 64-bit mode, then
+      you can rename  {code ccl64} to
+      {code ccl} so that you only need to type
+      "{code ccl}" to run it.|)
+      (para "Once this is done, it should be possible to invoke {CCL}
+        by typing {code ccl}
+        or {code ccl64} at a shell prompt:
+
+      "
+       (code-block "
+shell> ccl
+Welcome to Clozure Common Lisp Version 1.7  (DarwinX8632)!
+?"))
+      #:|The ccl shell script passes all of its arguments to the
+      {CCL} kernel.  See {section Invocation} for more
+      information about command-line arguments.
+      
+
+      Assuming the shell script is configured and invoked properly, {CCL}
+      should be able to initialize the {code "ccl:"}
+      logical host so that its translations refer to the
+      {code "ccl"} directory. To test this, you can call
+      {code probe-file} in {CCL}'s read-eval-print
+      loop:|
+      (code-block #:|
+? (probe-file "ccl:level-1;level-1.lisp")  ;returns the physical pathname of the file
+#P"/Users/joe/my_lisp_stuff/ccl/level-1/level-1.lisp"
+      |))
+    (defsection "Invocation"
+      (para "Assuming that the shell script is properly installed, it can be used to invoke {CCL} from a shell prompt:
+	    "
+       (code-block "shell> {sample ccl}{sample [args ...]}") "
+            By convention
+	    {code ccl} runs a 32-bit session;
+	    {code ccl64} runs a 64-bit session.
+            However, the name of the installed script(s) and the implementation that is invoked are customizable,
+            as described in {section The ccl Shell Script}.
+	  ")
+      (para "For details about command-line options see
+          {section Command Line Options}.
+          ")))
+  (defsection "Personal Customization with the Init File"
+    #:|By default {CCL} tries to load the file
+      {code "home:ccl-init.lisp"} or the compiled
+      {code "home:ccl-init.fasl"} upon starting up.
+      {CCL} does this by executing {code (load
+      "home:ccl-init")}.  If it's unable to load the file
+      (for example because the file doesn't exist), {CCL} doesn't
+      signal an error or warning, it just completes its startup
+      normally.
+
+
+      On Unix systems, if {code "ccl-init.lisp"} is not
+      present, {CCL} will look for {code ".ccl-init.lisp"}
+      (post 1.2 versions only).
+    
+
+      The {code "home:"} prefix to the filename is a
+      Common Lisp logical host, which {CCL} initializes to refer to
+      your home directory. {CCL} therefore looks for either of the
+      files
+      {code ~/ccl-init.lisp} or
+      {code ~/ccl-init.fasl}.
+
+      Because the init file is loaded the same way as normal Lisp
+      code is, you can put anything you want in it.  For example, you
+      can change the working directory, and load packages that you use
+      frequently.
+
+      To suppress the loading of this init-file, invoke {CCL} with the
+      {code --no-init} option.|)
+  (defsection "Command Line Options"
+    (para "When using {CCL} from the command line, the following
+      options may be used to modify its behavior.  The exact set of
+      {CCL} command-line arguments may vary per platform and
+      slowly changes over time.  The current set of command line
+      options may be retrieved by using the
+      {code --help} option.")
+    (listing :bullet
+      (item "{code -h} (or
+	      {code --help}).  Provides a definitive (if
+	      somewhat terse) summary of the command line options
+	      accepted by the {CCL} implementation and then
+	      exits.")
+      (item "{code -V} (or
+	      {code --version}).  Prints the version of
+	      {CCL} then exits.  The version string is the same value
+	      that is returned by
+	      {function lisp-implementation-version}.")
+      (item
+       (para "{code -K}{param character-encoding-name} (or
+	      {code --terminal-encoding}{param character-encoding-name}).
+	      Specifies the character encoding to use for
+	      {variable *terminal-io*} (see {section Character Encodings}).  Specifically, the
+	      {param character-encoding-name} string
+	      is uppercased and interned in the KEYWORD package. If an
+	      encoding named by that keyword exists,
+	      {variable *terminal-character-encoding-name*} is set to the name
+	      of that encoding.   {variable *terminal-character-encoding-name*} defaults to {code NIL}, which
+	      is a synonym for {code :ISO-8859-1}.")
+       (para "For example:
+	      "
+        (code-block "
+shell> ccl -K utf-8")
+        "
+	      has the effect of making the standard CL streams use
+	      {code :UTF-8} as their character
+	      encoding."))
+      (item "{code -n} (or
+	      {code --no-init}). If this option is given, the
+	      init file is not loaded.  This is useful if {CCL} is being
+	      invoked by a shell script that should not be affected by
+	      whatever customizations a user might have in place.")
+      (item "{code -e}{param form}
+	      (or {code --eval}). An expression is read (via
+	      {function read-from-string}) from the string
+	      {param form} and evaluated. If
+	      {param form} contains shell metacharacters,
+	      it may be necessary to escape or quote them to prevent the
+	      shell from interpreting them.")
+      (item "{code -l}{param path}
+	      (or {code --load}{param path}). Loads file specified by
+	      {param path}.")
+      (item "{code -T}{param n} (or
+	      {code --set-lisp-heap-gc-threshold}{param n}).  Sets the Lisp gc threshold to
+	      {param n}. (see {section GC Page reclamation policy}")
+      (item "{code -Q} (or
+	      {code --quiet}). Suppresses printing of
+	      heralds and prompts when the {code --batch}
+	      command line option is specified.")
+      (item "{code -R}{param n} (or
+	      {code --heap-reserve}). Reserves
+	      {param n} bytes for heap expansion.  The
+	      default is {code  549755813888}.  (see {section Heap space allocation})")
+      (item "{code -S}{param n} (or
+	      {code --stack-size}{param n}). Sets the size of the
+	      initial control stack to {param n}. (see {section Thread Stack Sizes})")
+      (item "{code -Z}{param n} (or
+	      {code --thread-stack-size}{param n}). Sets the size of the first
+	      thread's stack to {param n}. (see {section Thread Stack Sizes})")
+      (item #:|{code -b} (or {code --batch}). Execute in "batch mode". End-of-file
+	      from {variable *standard-input*} causes {CCL} to exit, as do attempts to
+	      enter a break loop.|)
+      (item "{code --no-sigtrap} An obscure option for running under GDB.")
+      (item #:|{code -I}{param image-name} (or
+	      {code --image-name}{param image-name}). Specifies the image
+	      name for the kernel to load.  Defaults to the kernel name
+	      with ".image" appended.|))
+    "The {code --load} and
+      {code --eval} options can each be provided
+      multiple times.  They're executed in the order specified on
+      the command line, after the init file (if there is one) is
+      loaded and before the toplevel read-eval-print loop is
+      entered.
+
+
+	Finally, any arguments following the pseudo-argument
+	{code --} are not processed, and are made
+	available to Lisp as the value of
+	{code ccl:*unprocessed-command-line-arguments*}.
+      ")
+  (defsection "Using {CCL} with GNU Emacs and SLIME"
+    "
+      SLIME (see  {link http://common-lisp.net/project/slime/ 
+      the SLIME web page}) is an Emacs mode for interacting with
+      Common Lisp systems.  {CCL} is well-supported by SLIME.
+    
+
+
+      See the {link http://trac.clozure.com/ccl/wiki/InstallingSlime 
+      InstallingSlime} topic on the {CCL} wiki for some tips
+      on how to get SLIME running with {CCL}.
+    ")
+  (defsection "Example Programs"
+    #:|A number (ok, a {emphasis small} number), of
+    example programs are distributed in the "ccl:examples;" directory
+    of the source distribution. See the README-OPENMCL-EXAMPLES text
+    file in that directory for information about prerequisites and
+    usage.
+
+      Some of the example programs are derived from C examples
+      in textbooks, etc.; in those cases, the original author and work
+      are cited in the source code.
+
+      Unless the original author or contributor claims other
+      rights, you're free to incorporate any of this example code or
+      derivative thereof in any of your own works without
+      restriction. In doing so, you agree that the code was provided
+      "as is", and that no other party is legally or otherwise
+      responsible for any consequences of your decision to use
+      it.
+
+      If you've developed {CCL} examples that you'd like to see
+      added to the distribution, please send mail to the {CCL} mailing
+      lists. Any such contributions would be welcome and appreciated
+      (as would bug fixes and improvements to the existing
+      examples.)|))

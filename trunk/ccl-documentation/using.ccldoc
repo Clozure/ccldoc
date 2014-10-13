@@ -1,0 +1,2335 @@
+
+(chapter "Using {CCL}"
+  (defsection "Introduction"
+    (para "The Common Lisp standard allows considerable latitude in the
+      details of an implementation, and each particular Common Lisp
+      system has some idiosyncrasies. This chapter describes ordinary
+      user-level features of {CCL}, including features that may be
+      part of the Common Lisp standard, but which may have quirks or
+      details in the {CCL} implementation that are not described by
+      the standard. It also describes extensions to the standard; that
+      is, features of {CCL} that are not part of the Common Lisp
+      standard at all."))
+  (defsection "Trace"
+    (para "
+      {CCL}'s tracing facility is invoked by an extended version of the Common Lisp
+      {code trace} macro.  Extensions allow tracing of methods, as well as finer control
+      over tracing actions.
+    ")
+    (definition (:macro trace)
+     "TRACE {lbrace} keyword global-value {rbrace}* {lbrace} spec | ( spec {lbrace} keyword local-value {rbrace}*){rbrace}*"
+     nil
+     (defsection "Description"
+       "
+      The {code trace} macro encapsulates the functions named by
+      {sample spec}s, causing trace actions to take place on entry and
+      exit from each function.  The default actions print a message on function entry and
+      exit. {sample Keyword}/{sample value} options
+      can be used to specify changes in the default behavior.
+    
+
+
+      Invoking {code (trace)} without arguments returns a list of functions being traced.
+    
+
+
+      A {sample spec} is either a symbol that is the name of a function, or an
+      expression of the form {code (setf {sample symbol})}, or a
+      specific method of a generic function in the form {code (:method
+        {sample gf-name} {lbrace}{sample qualifier}{rbrace}*
+        ({lbrace}{sample specializer}{rbrace}*))}, where a
+      {sample specializer} can be the name of a class or an {code EQL}
+      specializer.
+    
+
+
+      A {sample spec} can also be a string naming a package, or equivalently a
+      list {code (:package {sample package-name})}, in order to
+      request that all functions in the package to be traced.
+    
+
+
+      By default, whenever a traced function is entered or exited, a short message is
+      printed on {variable *trace-output*} showing the arguments on entry and
+      values on exit.  Options specified as key/value pairs can be used to modify this
+      behavior.  Options preceding the function {sample spec}s apply to
+      all the functions being traced.  Options specified along with a
+      {sample spec} apply to that spec only and override any
+      global options. The following options are supported:
+    "
+       (listing :definition
+         (item "{code :methods {lbrace}T | nil{rbrace}}" ccldoc::=>
+          " If true, and if applied to a {sample spec} naming a generic
+	        function, arranges to trace all the methods of the generic function in addition to the
+	        generic function itself.
+	      ")
+         (item "{code :inside {sample outside-spec}
+	        | ({lbrace}{sample outside-spec}{rbrace}*)}"
+          ccldoc::=> "Inhibits all trace actions unless the current
+	        invocation of the function being traced is inside one of the
+	        {sample outside-spec}'s, i.e. unless a function named by one of the
+	        {sample outside-spec}'s is currently on the stack.
+	        {sample outside-spec} can name a function, a
+	        method, or a package, as above.
+	      ")
+         (item (clause "{code :if {sample form}}, {code :condition {sample form}}") ccldoc::=>
+          " Evaluates {sample form} whenever the function being traced is
+	        about to be entered, and inhibits all trace actions if {sample form}
+	        returns nil. The form may reference the lexical variable {code ccl::args},
+	        which is a list of the arguments in this call. {code :condition} is just a
+	        synonym for {code :if}, though if both are specified, both must return non-nil.
+	      ")
+         (item "{code :before-if {sample form}}" ccldoc::=>
+          " Evaluates {sample form} whenever the function being traced is
+	        about to be entered, and inhibits the entry trace actions if
+	        {sample form} returns nil.  The form may reference the lexical variable
+	        {code ccl::args}, which is a list of the arguments in this call. If both
+	        {code :if} and {code :before-if} are specified, both must return
+	        non-nil in order for the before entry actions to happen.
+	      ")
+         (item "{code :after-if {sample form}}" ccldoc::=>
+          " Evaluates {sample form} whenever the function being traced has
+	        just exited, and inhibits the exit trace actions if {sample form}
+	        returns nil.  The form may reference the lexical variable {code ccl::vals},
+	        which is a list of values returned by this call. If both {code :if} and
+	        {code :after-if} are specified, both must return non-nil in order for the
+	        after exit actions to happen.
+	      ")
+         (item "{code :print-before {sample form}}" ccldoc::=>
+          " Evaluates {sample form} whenever the function being traced is
+	        about to be entered, and prints the result before printing the standard entry message.
+	        The form may reference the lexical variable {code ccl::args}, which is a list
+	        of the arguments in this call.  To see multiple forms, use {code values}:
+	        {code :print-before (values (one-thing) (another-thing))}.
+	      ")
+         (item "{code :print-after {sample form}}" ccldoc::=>
+          " Evaluates {sample form} whenever the function being traced has
+	        just exited, and prints the result after printing the standard exit message.  The form may
+	        reference the lexical variable {code ccl::vals}, which is a list of values
+	        returned by this call. To see multiple forms, use {code values}:
+	        {code :print-after (values (one-thing) (another-thing))}.
+	      ")
+         (item "{code :print {sample form}}" ccldoc::=>
+          "Equivalent to {code :print-before {sample form} :print-after {sample form}}.
+	      ")
+         (item "{code :eval-before {sample form}}" ccldoc::=>
+          "Evaluates {sample form} whenever the function being traced is
+	        about to be entered.  The form may reference the lexical variable
+	        {code ccl::args}, which is a list of the arguments in this call.
+	      ")
+         (item "{code :eval-after {sample form}}" ccldoc::=>
+          "Evaluates {sample form} whenever the function being has just
+	        exited.  The form may reference the lexical variable {code ccl::vals}, which
+	        is a list of values returned by this call.
+	      ")
+         (item "{code :eval {sample form}}" ccldoc::=> "Equivalent to {code :eval-before {sample form}
+	          :eval-after {sample form}}.
+	      ")
+         (item "{code :break-before {sample form}}" ccldoc::=>
+          "Evaluates {sample form} whenever the function being traced is
+	        about to be entered, and if the result is non-nil, enters a debugger break loop.  The form
+	        may reference the lexical variable {code ccl::args}, which is a list of the
+	        arguments in this call.
+	      ")
+         (item "{code :break-after {sample form}}" ccldoc::=>
+          "Evaluates {sample form} whenever the function being traced has
+	        just exited, and if the result is non-nil, enters a debugger break loop. The form may
+	        reference the lexical variable {code ccl::vals}, which is a list of values
+	        returned by this call.
+	      ")
+         (item "{code :break {sample form}}" ccldoc::=>
+          "Equivalent to {code :break-before {sample form} :break-after {sample form}}.
+	      ")
+         (item (clause "{code :backtrace-before {sample form}}, {code :backtrace {sample form}}") ccldoc::=>
+          (para "Evaluates {sample form} whenever the function being traced is
+	        about to be entered.  The form may reference the lexical variable
+	        {code ccl::args}, which is a list of the arguments in this call. The value
+	        returned by {sample form} is intepreted as follows:
+	      ")
+          (listing :definition
+            (item "{code nil}" ccldoc::=> "does nothing")
+            (item "{code :detailed}" ccldoc::=> "prints a detailed backtrace to
+	              {variable *trace-output*}.")
+            (item "{code (:detailed {sample integer})}" ccldoc::=> "prints the top {sample integer} frames of detailed
+	              backtrace to {variable *trace-output*}.
+	          ")
+            (item "{sample integer}" ccldoc::=> "prints top {sample integer} frames of a terse
+	              backtrace to {variable *trace-output*}.
+	          ")
+            (item "anything else" ccldoc::=> "prints a terse backtrace to {variable *trace-output*}.
+	          "))
+          (para "
+	        Note that unlike with the other options, {code :backtrace} is equivalent to
+	        {code :backtrace-before} only, not both before and after, since it's usually
+	        not helpful to print the same backtrace both before and after the function call.
+	      "))
+         (item "{code :backtrace-after {sample form}}" ccldoc::=>
+          (para "Evaluates {sample form} whenever the function being traced has
+	        just exited.  The form may reference the lexical variable {code ccl::vals},
+	        which is a list of values returned by this call. The value returned by
+	        {sample form} is intepreted as follows:
+	      ")
+          (listing :definition
+            (item "{code nil}" ccldoc::=> "does nothing")
+            (item "{code :detailed}" ccldoc::=> "prints a detailed backtrace to
+	              {variable *trace-output*}.")
+            (item "{code (:detailed {sample integer})}" ccldoc::=> "prints the top {sample integer} frames of detailed
+	              backtrace to {variable *trace-output*}.
+	          ")
+            (item "{sample integer}" ccldoc::=> "prints top {sample integer} frames of a terse
+	              backtrace to {variable *trace-output*}.
+	          ")
+            (item "anything else" ccldoc::=> "prints a terse backtrace to {variable *trace-output*}.
+	          ")))
+         (item "{code :before}{sample action}" ccldoc::=>
+          (para
+           "specifies the action to be taken just before the traced function is entered.  {sample action} is one of:")
+          (listing :definition
+            (item "{code :print}" ccldoc::=>
+             "The default, prints a short indented message showing the function name and the invocation arguments")
+            (item "{code :break}" ccldoc::=> "Equivalent to {code :before :print :break-before t}")
+            (item "{code :backtrace}" ccldoc::=> "Equivalent to {code :before :print :backtrace-before t}")
+            (item "{sample function}" ccldoc::=> "
+                  Any other value is interpreted as a function to call on entry instead of
+                  printing the standard entry message.  It is called with its first
+                  argument being the name of the function being traced, the remaining
+                  arguments being all the arguments to the function being traced, and
+                  {variable *trace-level*} bound to the current nesting level
+                  of trace actions. ")))
+         (item "{code :after}{sample action}" ccldoc::=>
+          (para "specifies the action to be taken just after the traced function exits.  {sample action} is one of:")
+          (listing :definition
+            (item "{code :print}" ccldoc::=>
+             "The default, prints a short indented message showing the function name and the
+	              returned values ")
+            (item "{code :break}" ccldoc::=> "Equivalent to {code :after :print :break-after t}")
+            (item "{code :backtrace}" ccldoc::=> "Equivalent to {code :after :print :backtrace-after t}")
+            (item "{sample function}" ccldoc::=> "Any other value is interpreted as a function to
+	              call on exit instead of printing the standard exit
+	              message.  It is called with its first argument being
+	              the name of the function being traced, the
+	              remaining arguments being all the values returned by the function
+	              being traced, and ccl:*trace-level* bound to the current
+	              nesting level of trace actions.
+	            "))))))
+    (definition (:variable *trace-level*) "CCL:*TRACE-LEVEL*" nil
+     (defsection "Description"
+       (para
+        "Variable bound to the current nesting level during execution of before and after trace actions.  The default printing actions use it to determine the amount of indentation.")))
+    (definition (:variable *trace-max-indent*) "CCL:*TRACE-MAX-INDENT*" nil
+     (defsection "Description"
+       (para
+        "The default before and after print actions will not indent by more than the value of {variable *trace-max-indent*} regardless of the current trace level.")))
+    (definition (:function trace-function) "CCL:TRACE-FUNCTION spec {code &key} {lbrace} keyword value {rbrace}*" nil
+     (defsection "Description"
+       (para "
+      This is a functional version of the TRACE macro.  {sample spec} and
+      {sample keyword}s are as for TRACE, except that all arguments are evaluated.
+    ")))
+    (definition (:variable *trace-print-level*) "CCL:*TRACE-PRINT-LEVEL*" nil
+     (defsection "Description"
+       (para "The default print actions bind {variable *print-level*} to this value while
+      printing. Note that this rebinding is only in effect during the default entry and exit messages.
+      It does not apply to printing of {code :print-before/:print-after} forms or any
+      explicit printing done by user code.")))
+    (definition (:variable *trace-print-length*) "CCL:*TRACE-PRINT-LENGTH*" nil
+     (defsection "Description"
+       (para "The default print actions bind {variable *print-length*} to this value while
+      printing. Note that this rebinding is only in effect during the default entry and exit messages.
+      It does not apply to printing of {code :print-before/:print-after} forms or any
+      explicit printing done by user code.")))
+    (definition (:variable *trace-bar-frequency*) "CCL:*TRACE-BAR-FREQUENCY*" nil
+     (defsection "Description"
+       (para "By default, this is nil. If non-nil it should be a integer,
+    and the default entry and exit messages will print a | instead of
+    space every this many levels of indentation."))))
+  (defsection "Advising"
+    "
+    The {code advise} macro can be thought of as a more
+    general version of {code trace}. It allows code that
+    you specify to run before, after, or around a given function, for
+    the purpose of changing the behavior of the function. Each piece
+    of added code is called a piece of advice. Each piece of advice
+    has a unique name, so that you can have multiple pieces of advice
+    on the same function, including multiple
+    {code :before}, {code :after}, and
+    {code :around} pieces of advice.
+  
+
+
+    The {code :name} and {code :when}
+    keywords serve to identify the piece of advice.  A later call to
+    {code advise} with the same values of
+    {code :name} and {code :when} will replace
+    the existing piece of advice; a call with different values will not.
+  "
+    (definition (:macro advise) "advise spec form {code &key} when name"
+     (clause "
+	Add a piece of advice to the function or method specified by
+	{param spec} according to
+	{param form}.
+      ")
+     (defsection "Arguments and Values"
+       (listing :definition
+         (item "{param spec}" ccldoc::=> "
+	      A specification of the function on which to put the
+	      advice.  This is either a symbol that is the name of a
+	      function or generic function, or an expression of the
+	      form (setf {sample symbol}), or a
+	      specific method of a generic function in the form
+	      (:method symbol {lbrace}qualifiers{rbrace} (specializer {lbrace}specializer{rbrace})).
+	    ")
+         (item "{param form}" ccldoc::=> "
+	      A form to execute before, after, or around the advised
+	      function. The form can refer to the variable arglist
+	      that is bound to the arguments with which the advised
+	      function was called. You can exit from form with
+	      (return).
+	    ")
+         (item "{param name}" ccldoc::=> "
+	      A name that identifies the piece of advice.
+	    ")
+         (item "{param when}" ccldoc::=> "
+	      An argument that specifies when the piece of advice is
+	      run. There are three allowable values. The default is
+	      {code :before}, which specifies that form is
+	      executed before the advised function is called. Other
+	      possible values are {code :after}, which
+	      specifies that form is executed after the advised
+	      function is called, and {code :around},
+	      which specifies that form is executed around the call to
+	      the advised function. Use {code (:do-it)}
+	      within form to indicate invocation of the original
+	      definition.
+	    ")))
+     (defsection "Examples"
+       (para "
+	The function {code foo}, already defined, does
+	something with a list of numbers. The following code uses a
+	piece of advice to make foo return zero if any of its
+	arguments is not a number. Using :around advice, you can do
+	the following:
+	"
+        (code-block "
+(advise foo (if (some #'(lambda (n) (not (numberp n))) arglist)
+	      0
+	      (:do-it))
+	:when :around :name :zero-if-not-nums)
+	"))
+       (para "
+	To do the same thing using a :before piece of advice:
+	"
+        (code-block "
+(advise foo (if (some #'(lambda (n) (not (numberp n))) arglist)
+	      (return 0))
+	:when :before :name :zero-if-not-nums)
+	"))))
+    (definition (:macro unadvise) "unadvise spec {code &key} when name"
+     (clause "
+	Remove the piece or pieces of advice matching {param spec},
+	{param when}, and {param name}.
+      ")
+     (defsection "Description"
+       (para "
+	The unadvise macro removes the piece or pieces of advice
+	matching {code spec}, {code when},
+	and {code name}. When the value of
+	{code spec} is t and the values of {code when}
+	and {code name} are nil, unadvise
+	removes every piece of advice; when {code spec} is
+	t, the argument {code when} is nil, and
+	{code name} is non-nil, unadvise removes all
+	pieces of advice with the given name.
+      "))
+     (defsection "Arguments and Values"
+       (para "
+	The arguments have the same meaning as in
+	"
+        (ref (definition :macro advise)) ".
+      ")))
+    (definition (:macro advisedp) "advisedp spec {code &key} when name"
+     (clause "
+	Return a list of the pieces of advice matching {param spec},
+	{param when}, and {param name}.
+      ")
+     (defsection "Description"
+       (para "
+	The advisedp macro returns a list of existing pieces of advice
+	that match {code spec}, {code when},
+	and {code name}. When the value of
+	{code spec} is t and the values of
+	{code when} and {code name} are nil,
+	advisedp returns all existing pieces of advice.
+      "))
+     (defsection "Arguments and Values"
+       (para "
+	The arguments have the same meaning as in
+	"
+        (ref (definition :macro advise)) ".
+      "))))
+  (defsection "Directory"
+    (para "{CCL}'s {function directory} function accepts the following
+implementation-dependent keyword arguments:")
+    (listing :definition
+      (item "{code :files}{sample boolean}" ccldoc::=>
+       " If true, includes regular (non-directory) files in DIRECTORY's output.  Defaults to T.")
+      (item "{code :directories}{sample boolean}" ccldoc::=>
+       " If true, includes directories in DIRECTORY's output.  Defaults to NIL.")
+      (item "{code :all}{sample boolean}" ccldoc::=>
+       #:| If true, includes files and directories whose names start with a dot character in DIRECTORY's output.  (Entries whose name is "." or ".." are never included.) Defaults to T.|)
+      (item "{code :follow-links}{sample boolean}" ccldoc::=>
+       " If true, includes the TRUENAMEs of symbolic or hard links in DIRECTORY's output; if false, includes the link filenames without attempting to resolve them. Defaults to T.
+
+Note that legacy HFS alias files are treated as plain files.")))
+  (defsection "Unicode"
+    (para "All characters and strings in {CCL} fully support Unicode by
+    using UTF-32. There is only one {code CHARACTER} type
+    and one {code STRING} type in {CCL}.  There has been a
+    lot of discussion about this decision which can be found by
+    searching the openmcl-devel archives at {link http://clozure.com/pipermail/openmcl-devel/}.  Suffice it
+    to say that we decided that the simplicity and speed advantages of
+    only supporting UTF-32 outweigh the space disadvantage.")
+    (defsection "Characters"
+      "There is one {code CHARACTER} type in {CCL}.
+    All {code CHARACTER}s are
+    {code BASE-CHAR}s.  {variable char-code-limit}
+    is now {code #x110000}, which means that all Unicode
+    characters can be directly represented.  As of Unicode 5.0, only
+    about 100,000 of 1,114,112 possible {code CHAR-CODE}s
+    are actually defined. The function {function code-char}
+    knows that certain ranges of code values (notably
+    {code #xd800}-{code #xddff}) will never be
+    valid character codes and will return {code NIL} for
+    arguments in that range, but may return a
+    non-{code NIL} value (an undefined/non-standard
+    {code CHARACTER} object) for other unassigned code
+    values.
+
+    {CCL} supports character names of the form
+    {code u+xxxx}-where {code x} is a
+    sequence of one or more hex digits.  The value of the hex digits
+    denotes the code of the character.  The {code +}
+    character is optional, so {code #\\u+0020},
+    {code #\\U0020}, and {code #\\U+20} all
+    refer to the {code #\\Space} character.
+
+    Characters with codes in the range
+    {code #xa0}-{code #x7ff} also have
+    symbolic names These are the names from the Unicode standard with
+    spaces replaced by underscores.  So
+    {code #\\Greek_Capital_Letter_Epsilon} can be used to
+    refer to the character whose {function char-code} is
+    {code #x395}.  To see the complete list of supported
+    character names, look just below the definition for
+    {function ccl::register-character-name} in
+    {code ccl:level-1;l1-reader.lisp}.")
+    (defsection "External Formats"
+      (para "{function open}, {function load}, and
+    {function compile-file} all take an
+    {code :EXTERNAL-FORMAT} keyword argument.  The value
+    of {code :EXTERNAL-FORMAT} can be
+    {code :DEFAULT} (the default value), a line
+    termination keyword (see {section Line Termination Keywords}), a character encoding
+    keyword (see {section Character Encodings}), an
+    external-format object created using
+    {function make-external-format} (see "
+       (ref (definition :function make-external-format)) "), or a plist with keys:
+    {code :DOMAIN}, {code :CHARACTER-ENCODING}
+    and {code :LINE-TERMINATION}.  If
+    {param argument} is a plist, the result of
+    {code (APPLY #'MAKE-EXTERNAL-FORMAT
+    {param argument})} will be used.")
+      "If {code :DEFAULT} is specified, then the value
+    of {variable *default-external-format*} is used.  If
+    no line-termination is specified, then the value of
+    {variable *default-line-termination*} is used, which
+    defaults to {code :UNIX}.  If no character encoding is
+    specified, then
+    {variable *default-file-character-encoding*} is used
+    for file streams and
+    {variable *default-socket-character-encoding*} is used
+    for socket streams.  The default, default character encoding is
+    {code NIL} which is a synonym for
+    {code :ISO-8859-1}.
+
+    Note that the set of keywords used to denote
+    CHARACTER-ENCODINGs and the set of keywords used to denote
+    line-termination conventions is disjoint: a keyword denotes at
+    most a character encoding or a line termination convention, but
+    never both.
+
+    EXTERNAL-FORMATs are objects (structures) with two
+    read-only fields that can be accessed via the functions:
+    {function external-format-line-termination} and
+    {function external-format-character-encoding}."
+      (definition (:variable *default-external-format*) "CCL:*DEFAULT-EXTERNAL-FORMAT*" nil
+       (defsection "Description"
+         "The value of this variable is used when :EXTERNAL-FORMAT is
+	        unspecified or specified as :DEFAULT. It can
+	        meaningfully be given any value that can be used as an
+                external-format (except for the value :DEFAULT.)
+	      
+
+	        The initial value of this variable
+	        in {CCL} is {code :UNIX}, which is equivalent to
+                {code (:LINE-TERMINATION :UNIX)}, among other
+                things.  "))
+      (definition (:variable *default-line-termination*) "CCL:*DEFAULT-LINE-TERMINATION*" nil
+       (defsection "Description"
+         "The value of this variable is used when an external-format
+                doesn't specify a line-termination convention (or specifies
+                it as :DEFAULT.) It can meaningfully be given any value 
+                that can be used as a line termination keyword 
+                (see {section Line Termination Keywords}).
+	      
+
+	        The initial value of this variable
+	        in {CCL} is {code :UNIX}.
+          "))
+      (definition (:function make-external-format)
+       "make-external-format {code &key} domain character-encoding line-termination => external-format"
+       "Either creates a new external format object, or
+	return an existing one with the same specified slot
+	values."
+       (defsection "Arguments and Values"
+         (listing :definition
+           (item "{param domain}" ccldoc::=> "This is used to indicate where the external
+	      format is to be used.  Its value can be almost
+	      anything.  It defaults to {code NIL}.
+	      There are two domains that have a pre-defined meaning in
+	      {CCL}: {code :FILE} indicates
+	      encoding for a file in the file system and
+	      {code :SOCKET} indicates i/o to/from a
+	      socket.  The value of {param domain}
+	      affects the default values for
+	      {param character-encoding} and
+	      {param line-termination}.")
+           (item "{param character-encoding}" ccldoc::=> "A keyword that specifies the character encoding
+	      for the external format. {section Character Encodings}.  Defaults to
+	      {code :DEFAULT} which means if
+	      {param domain} is
+	      {code :FILE} use the value of the variable
+	      {variable *default-file-character-encoding*}
+	      and if {param domain} is
+	      {code :SOCKET}, use the value of the
+	      variable
+	      {variable *default-socket-character-encoding*}.
+	      The initial value of both of these variables is
+	      {code NIL}, which means the
+	      {code :ISO-8859-1} encoding.")
+           (item "{param line-termination}" ccldoc::=> "A keyword that indicates a line termination
+	      keyword {section Line Termination Keywords}.
+	      Defaults to {code :DEFAULT} which means
+	      use the value of the variable
+	      {variable *default-line-termination*}.")
+           (item "{param external-format}" ccldoc::=> "An external-format object as described above.")))
+       (defsection "Description"
+         (para "Despite the function's name, it doesn't necessarily create a
+	new, unique EXTERNAL-FORMAT object: two calls to
+	MAKE-EXTERNAL-FORMAT with the same arguments made in the same
+	dynamic environment return the same (eq) object.
+	"))))
+    (defsection "Line Termination Keywords"
+      (para "Line termination keywords indicate which characters are used
+  to indicate the end of a line.  On input, the external line
+  termination characters are replaced by {code #\\Newline}
+  and on output, {code #\\Newline}s are converted to the
+  external line termination characters.")
+      (table "Line Termination Keywords" (row (item "keyword") (item "character(s)"))
+        (row (item "{code :UNIX}") (item "{code #\\Linefeed}"))
+        (row (item "{code :MACOS}") (item "{code #\\Return}"))
+        (row (item "{code :CR}") (item "{code #\\Return}"))
+        (row (item "{code :CRLF}") (item "{code #\\Return #\\Linefeed}"))
+        (row (item "{code :CP/M}") (item "{code #\\Return #\\Linefeed}"))
+        (row (item "{code :MSDOS}") (item "{code #\\Return #\\Linefeed}"))
+        (row (item "{code :DOS}") (item "{code #\\Return #\\Linefeed}"))
+        (row (item "{code :WINDOWS}") (item "{code #\\Return #\\Linefeed}"))
+        (row (item "{code :INFERRED}") (item "see below"))
+        (row (item "{code :UNICODE}") (item "{code #\\Line_Separator}")))
+      (para "{code :INFERRED} means that a stream's
+  line-termination convention is determined by looking at the contents
+  of a file.  It is only useful for {code FILE-STREAM}s
+  that're open for {code :INPUT} or
+  {code :IO}.  The first buffer full of data is examined,
+  and if a {code #\\Return} character occurs before any
+  {code #\\Linefeed} character, then the line termination
+  type is set to {code :WINDOWS} if that
+  {code #\\Return} character is immediately followed by a
+  {code #\\Linefeed} character and to {code :MACOS}
+  otherwise.  If a {code #\\Return} character isn't found in
+  the buffer or if {code #\\Return} is preceded by
+  {code #\\Linefeed}, the file's line terminationt type
+  is set to {code :UNIX}."))
+    (defsection "Character Encodings"
+      "Internally, all characters and strings in {CCL} are in
+    UTF-32.  Externally, files or socket streams may encode characters
+    in a wide variety of ways.  The International Organization for
+    Standardization, widely known as ISO, defines many of these
+    character encodings.  {CCL} implements some of these encodings as
+    detailed below.  These encodings are part of the specification of
+    external formats {section External Formats}.  When reading
+    from a stream, characters are converted from the specified
+    external character encoding to UTF-32.  When writing to a stream,
+    characters are converted from UTF-32 to the specified character
+    encoding.
+
+    Internally, CHARACTER-ENCODINGs are objects (structures)
+    that are named by character encoding keywords (:ISO-8859-1,
+    :UTF-8, etc.).  The structures contain attributes of the encoding
+    and functions used to encode/decode external data, but unless
+    you're trying to define or debug an encoding there's little reason
+    to know much about the CHARACTER-ENCODING objects and it's usually
+    preferable to refer to a character encoding by its name.
+    
+
+
+    "
+      (defsection "Encoding Problems"
+        (para #:|On output to streams with character encodings that can
+      encode the full range of Unicode-and on input from any
+      stream-"unencodable characters" are represented using the
+      Unicode #\\Replacement_Character (= #\\U+fffd); the presence of
+      such a character usually indicates that something got lost in
+      translation.  Either data wasn't encoded properly or there was a
+      bug in the decoding process.|))
+      (defsection "Byte Order Marks"
+        "The endianness of a character encoding is sometimes
+      explicit, and sometimes not.  For example,
+      {code :UTF-16BE} indicates big-endian, but
+      {code :UTF-16} does not specify endianness.  A byte
+      order mark is a special character that may appear at the
+      beginning of a stream of encoded characters to specify the
+      endianness of a multi-byte character encoding.  (It may also be
+      used with UTF-8 character encodings, where it is simply used to
+      indicate that the encoding is UTF-8.)
+
+      {CCL} writes a byte order mark as the first character
+      of a file or socket stream when the endianness of the character
+      encoding is not explicit.  {CCL} also expects a byte order
+      mark on input from streams where the endianness is not
+      explicit. If a byte order mark is missing from input data, that
+      data is assumed to be in big-endian order.
+
+      A byte order mark from a UTF-8 encoded input stream is not
+      treated specially and just appears as a normal character from
+      the input stream.  It is probably a good idea to skip over this
+      character.")
+      (defsection "DESCRIBE-CHARACTER-ENCODINGS"
+        (para "The set of character encodings supported by {CCL} can be
+    retrieved by calling
+    {function describe-character-encodings}.")
+        (definition (:function describe-character-encodings) "describe-character-encodings"
+         (clause "Writes descriptions of defined character
+	  encodings to {variable *terminal-io*}.")
+         (defsection "Description"
+           (para "Writes descriptions of all defined character encodings
+	  to {variable *terminal-io*}.  These descriptions
+	  include the names of the encoding's aliases and a doc string
+	  which briefly describes each encoding's properties and
+	  intended use."))
+         (defsection "See Also"
+           (clause
+            "{section Character Encodings}, {section External Formats}, {section Supported Character Encodings}"))))
+      (defsection "Supported Character Encodings"
+        (para "The list of supported encodings is reproduced here.  Most
+     encodings have aliases, e.g. the encoding named
+     {code :ISO-8859-1} can also be referred to by the
+     names {code :LATIN1} and {code :IBM819},
+     among others.  Where possible, the keywordized name of an
+     encoding is equivalent to the preferred MIME charset name (and
+     the aliases are all registered IANA charset names.)")
+        (listing :definition
+          (item "{code :ISO-8859-1}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which all character codes map to their Unicode
+       equivalents. Intended to support most characters used in most
+       Western European languages.
+
+       {CCL} uses ISO-8859-1 encoding for
+       {variable *terminal-io*} and for all streams whose
+       EXTERNAL-FORMAT isn't explicitly specified.  The default for
+       {variable *terminal-io*} can be set via the
+       {code -K} command-line argument (see {section Command Line Options}).
+       
+
+       ISO-8859-1 just covers the first 256 Unicode code
+       points, where the first 128 code points are equivalent to
+       US-ASCII.  That should be pretty much equivalent to what
+       earliers versions of {CCL} did that only supported 8-bit characters,
+       but it may not be optimal for users working in a particular
+       locale.
+
+       Aliases: {code :ISO_8859-1, :LATIN1, :L1,
+       :IBM819, :CP819, :CSISOLATIN1}")
+          (item "{code :ISO-8859-2}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in most languages used in
+       Central/Eastern Europe.
+
+       Aliases: {code :ISO_8859-2, :LATIN2, :L2,
+       :CSISOLATIN2}")
+          (item "{code :ISO-8859-3}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in most languages used in
+       Southern Europe.
+
+       Aliases: {code :ISO_8859-3, :LATIN3 :L3,
+       :CSISOLATIN3}")
+          (item "{code :ISO-8859-4}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in most languages used in
+       Northern Europe.
+
+Aliases: {code :ISO_8859-4, :LATIN4, :L4, :CSISOLATIN4}")
+          (item "{code :ISO-8859-5}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in the Cyrillic
+       alphabet.
+
+       Aliases: {code :ISO_8859-5, :CYRILLIC, :CSISOLATINCYRILLIC,
+       :ISO-IR-144}")
+          (item "{code :ISO-8859-6}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in the Arabic
+       alphabet.
+
+       Aliases: {code :ISO_8859-6, :ARABIC, :CSISOLATINARABIC,
+       :ISO-IR-127}")
+          (item "{code :ISO-8859-7}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in the Greek
+       alphabet.
+
+       Aliases: {code :ISO_8859-7, :GREEK, :GREEK8, :CSISOLATINGREEK,
+       :ISO-IR-126, :ELOT_928, :ECMA-118}")
+          (item "{code :ISO-8859-8}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in the Hebrew
+       alphabet.
+
+       Aliases: {code :ISO_8859-8, :HEBREW, :CSISOLATINHEBREW,
+       :ISO-IR-138}")
+          (item "{code :ISO-8859-9}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#xcf map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in the Turkish
+       alphabet.
+
+       Aliases: {code :ISO_8859-9, :LATIN5, :CSISOLATIN5,
+       :ISO-IR-148}")
+          (item "{code :ISO-8859-10}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in Nordic
+       alphabets.
+
+       Aliases: {code :ISO_8859-10, :LATIN6, :CSISOLATIN6,
+       :ISO-IR-157}")
+          (item "{code :ISO-8859-11}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found the Thai
+       alphabet.")
+          (item "{code :ISO-8859-13}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in Baltic
+       alphabets.")
+          (item "{code :ISO-8859-14}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in Celtic
+       languages.
+
+       Aliases: {code :ISO_8859-14, :ISO-IR-199, :LATIN8, :L8,
+       :ISO-CELTIC}")
+          (item "{code :ISO-8859-15}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in Western European languages
+       (including the Euro sign and some other characters missing from
+       ISO-8859-1.
+
+Aliases: {code :ISO_8859-15, :LATIN9}")
+          (item "{code :ISO-8859-16}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x9f map to their Unicode equivalents and
+       other codes map to other Unicode character values.  Intended to
+       provide most characters found in Southeast European
+       languages.
+
+       Aliases: {code :ISO_8859-16, :ISO-IR-199, :LATIN8, :L8,
+       :ISO-CELTIC}")
+          (item "{code :MACINTOSH}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+       which codes #x00-#x7f map to their Unicode equivalents and
+       other codes map to other Unicode character values.
+       Traditionally used on Classic MacOS to encode characters used
+       in western languages.
+
+       Aliases: {code :MACOS-ROMAN, :MACOSROMAN, :MAC-ROMAN,
+       :MACROMAN}")
+          (item "{code :UCS-2}" ccldoc::=> "A 16-bit, fixed-length encoding in which
+       characters with CHAR-CODEs less than #x10000 can be encoded in
+       a single 16-bit word.  The endianness of the encoded data is
+       indicated by the endianness of a byte-order-mark character
+       (#u+feff) prepended to the data; in the absence of such a
+       character on input, the data is assumed to be in big-endian
+       order.")
+          (item "{code :UCS-2BE}" ccldoc::=> "A 16-bit, fixed-length encoding in which
+       characters with CHAR-CODEs less than #x10000 can be encoded in
+       a single 16-bit big-endian word. The encoded data is implicitly
+       big-endian; byte-order-mark characters are not interpreted on
+       input or prepended to output.")
+          (item "{code :UCS-2LE}" ccldoc::=> "A 16-bit, fixed-length encoding in which
+       characters with CHAR-CODEs less than #x10000 can be encoded in
+       a single 16-bit little-endian word. The encoded data is
+       implicitly little-endian; byte-order-mark characters are not
+       interpreted on input or prepended to output.")
+          (item "{code :US-ASCII}" ccldoc::=> "An 7-bit, fixed-width character encoding in
+       which all character codes map to their Unicode
+       equivalents. 
+
+       Aliases: {code :CSASCII, :CP637, :IBM637, :US,
+       :ISO646-US, :ASCII, :ISO-IR-6}")
+          (item "{code :UTF-16}" ccldoc::=> "A 16-bit, variable-length encoding in which
+       characters with CHAR-CODEs less than #x10000 can be encoded in
+       a single 16-bit word and characters with larger codes can be
+       encoded in a pair of 16-bit words.  The endianness of the
+       encoded data is indicated by the endianness of a
+       byte-order-mark character (#u+feff) prepended to the data; in
+       the absence of such a character on input, the data is assumed
+       to be in big-endian order. Output is written in native
+       byte-order with a leading byte-order mark.")
+          (item "{code :UTF-16BE}" ccldoc::=> "A 16-bit, variable-length encoding in which
+       characters with CHAR-CODEs less than #x10000 can be encoded in
+       a single 16-bit big-endian word and characters with larger
+       codes can be encoded in a pair of 16-bit big-endian words.  The
+       endianness of the encoded data is implicit in the encoding;
+       byte-order-mark characters are not interpreted on input or
+       prepended to output.")
+          (item "{code :UTF-16LE}" ccldoc::=> "A 16-bit, variable-length encoding in which
+       characters with CHAR-CODEs less than #x10000 can be encoded in
+       a single 16-bit little-endian word and characters with larger
+       codes can be encoded in a pair of 16-bit little-endian words.
+       The endianness of the encoded data is implicit in the encoding;
+       byte-order-mark characters are not interpreted on input or
+       prepended to output.")
+          (item "{code :UTF-32}" ccldoc::=> "A 32-bit, fixed-length encoding in which all
+       Unicode characters can be encoded in a single 32-bit word.  The
+       endianness of the encoded data is indicated by the endianness
+       of a byte-order-mark character (#u+feff) prepended to the data;
+       in the absence of such a character on input, input data is
+       assumed to be in big-endian order.  Output is written in native
+       byte order with a leading byte-order mark.
+
+Alias: {code :UTF-4}")
+          (item "{code :UTF-32BE}" ccldoc::=> "A 32-bit, fixed-length encoding in which all
+       Unicode characters encoded in a single 32-bit word. The encoded
+       data is implicitly big-endian; byte-order-mark characters are
+       not interpreted on input or prepended to
+       output.
+
+Alias: {code :UCS-4BE}")
+          (item "{code :UTF-8}" ccldoc::=> "An 8-bit, variable-length character encoding in
+       which characters with CHAR-CODEs in the range #x00-#x7f can be
+       encoded in a single octet; characters with larger code values
+       can be encoded in 2 to 4 bytes.")
+          (item "{code :UTF-32LE}" ccldoc::=> "A 32-bit, fixed-length encoding in which all
+       Unicode characters can encoded in a single 32-bit word. The
+       encoded data is implicitly little-endian; byte-order-mark
+       characters are not interpreted on input or prepended to
+       output.
+
+Alias: {code :UCS-4LE}")
+          (item "{code :Windows-31j}" ccldoc::=> "An 8-bit, variable-length character encoding in
+     which character code points in the range #x00-#x7f can be encoded
+     in a single octet; characters with larger code values can be
+     encoded in 2 bytes.
+
+Aliases: {code :CP932, :CSWINDOWS31J}")
+          (item "{code :EUC-JP}" ccldoc::=> "An 8-bit, variable-length character encoding in
+     which character code points in the range #x00-#x7f can be encoded
+     in a single octet; characters with larger code values can be
+     encoded in 2 bytes.
+
+Alias: {code :EUCJP}")
+          (item "{code :GB2312}" ccldoc::=> "An 8-bit, variable-length character encoding in which
+     character code points in the range #x00-#x80 can be encoded in a
+     single octet; characters with larger code values can be encoded
+     in 2 bytes.
+
+Alias: {code :GB2312-80 :GB2312-1980 :EUC-CN :EUCCN}")
+          (item "{code :CP936}" ccldoc::=> "An 8-bit, variable-length character encoding in which
+     character code points in the range #x00-#x80 can be encoded in a
+     single octet; characters with larger code values can be encoded
+     in 2 bytes.
+
+Alias: {code :GBK :MS936 :WINDOWS-936}")))
+      (defsection "Encoding and Decoding Strings"
+        (para "{CCL} provides functions to encode and decode strings
+to and from vectors of type (simple-array (unsigned-byte 8)).")
+        (definition (:function count-characters-in-octet-vector)
+         "count-characters-in-octet-vector vector {code &key} start end external-format" nil
+         (defsection "Description"
+           (para "
+    Returns the number of characters that would be produced by
+    decoding {param vector} (or the subsequence thereof
+    delimited by {param start} and {param end})
+    according to {param external-format}.
+  ")))
+        (definition (:function decode-string-from-octets)
+         "decode-string-from-octets vector {code &key} start end external-format string" nil
+         (defsection "Description"
+           "
+    Decodes the octets in {param vector} (or the subsequence
+    of it delimited by {param start} and
+    {param end}) into a string according
+    to {param external-format}.
+  
+
+
+    If {param string} is supplied, output will be written into it.
+    It must be large enough to hold the decoded characters.  If {param 
+    string} is not supplied, a new string will be allocated to
+    hold the decoded characters.
+  
+
+
+    Returns, as multiple values, the decoded string and the position in
+    {param vector} where the decoding ended.
+  
+
+
+    Sequences of octets in {param vector} that cannot be
+    decoded into characters according to
+    {param external-format} will be decoded as
+    #\\Replacement_Character.
+  "))
+        (definition (:function encode-string-to-octets)
+         "encode-string-to-octets string {code &key} start end external-format use-byte-order-mark vector vector-offset"
+         nil
+         (defsection "Description"
+           "
+    Encodes {param string} (or the substring delimited by
+    {param start} and {param end})
+    into {param external-format} and returns, as multiple
+    values, a vector of octets containing the encoded data and an integer
+    that specifies the offset into the vector where the encoded data ends.
+  
+
+
+    When {param use-byte-order-mark} is true, a byte-order mark
+    will be included in the encoded data.
+  
+
+
+    If {param vector} is supplied, output will be written
+    to it.  It must be of type (simple-array (unsigned-byte 8)) and be
+    large enough to hold the encoded data.  If it is not supplied, the function
+    will allocate a new vector.
+  
+
+
+    If {param vector-offset} is supplied, data will be written
+    into the output vector starting at that offset.
+  
+
+
+    Characters in {param string} that cannot be encoded
+    into {param external-format} will be replaced with an
+    encoding-dependent replacement character
+    (#\\Replacement_Character or #\\Sub) before being encoded and written
+    into the output vector.
+  "))
+        (definition (:function string-size-in-octets)
+         "string-size-in-octets string {code &key} start end external-format use-byte-order-mark" nil
+         (defsection "Description"
+           "
+    Returns the number of octets required to encode
+    {param string} (or the substring delimited by
+    {param start} and {param end}) into
+    {param external-format}.
+  
+
+
+    When {param use-byte-order-mark} is true, the returned
+    size will include space for a byte-order marker.
+  ")))))
+  (defsection "Pathnames"
+    (defsection "Pathname Expansion"
+      #:|Leading tilde (~) characters in physical pathname namestrings
+        are expanded in the way that most shells do:
+
+        {code "~user/..."} can be used to refer to an absolute pathname rooted
+        at the home directory of the user named "user".
+
+        {code "~/..."} can be used to refer to an absolute pathname rooted at
+        the home directory of the current user.|)
+    (defsection "Predefined Logical Hosts"
+      "{CCL} sets up logical pathname translations for logical hosts:  {code ccl} and {code home}
+
+        The {system CCL} logical host should point to the
+        {system ccl} directory.  It is used for a variety of
+        purposes by {CCL} including: locating {CCL} source code,
+        {code require} and {code provide}, accessing
+        foreign function information, and the {CCL} build process. It
+        is set to the value of the environment variable
+        {system CCL_DEFAULT_DIRECTORY}, which is set by the
+        openmcl shell script {section The ccl Shell Script}.  If
+        {system CCL_DEFAULT_DIRECTORY} is not set, then it is set
+        to the directory containing the current heap image.")
+    (defsection "Pathname Namestrings"
+      #:|
+	The syntax of namestrings is implementation-defined in Common Lisp.
+	Portable programs cannot assume much of anything about them.  (See
+	section 19.1.1 of the Common Lisp standard for more information.)
+      
+
+
+	When translating a namestring into a pathname object, most
+	implementations seem to follow the convention that a dot
+	character in the namestring separates the
+	{code pathname-name} and
+	the {code pathname-type}.  When there is more
+	than one dot in involved, or when dots appear at the beginning
+	or end of the namestrings, what to do is less clear: does
+	".emacs" describe a pathname whose name is
+	{code nil} and whose type is {code emacs}
+	or something else?  Similarly, given "a.b.c", the question
+	is which parts are parsed as the pathname name, and which are
+	parsed as the pathname type?
+      
+
+
+	When generating a namestring from a pathname object (as happens,
+	for example, when printing a pathname), {CCL}
+	tries to avoid some potential ambiguity by escaping characters
+	that might otherwise be used to separate pathname components.
+	The character used to quote or escape the separators is a
+	backlash on Unix systems, and a #\\> character on Windows.
+	So, for example, "a\\\\.b.c"
+	has name "a.b" and type "c", whereas "a.b\\\\.c" has name
+	"a" and type "b.c".
+      
+
+
+	To get a native namestring suitable for passing to an
+	operating system command, use the function
+	{code ccl:native-translated-namestring}.
+      |
+      (defsection "Working with native namestrings"
+        (definition (:function native-translated-namestring) "native-translated-namestring pathname-designator" "
+	    Return a namestring that uses the conventions of the
+	    native operating system.
+	  "
+         (defsection "Description"
+           #:|
+	  This function returns a namestring that represents a pathname
+	  using the native conventions of the operating system.
+	  Any quoting or escaping of special characters will be removed.
+	
+
+
+	  For example, suppose that {param p} is a pathname made
+	  by {code (make-pathname :name "a.b" :type "c")}.
+	  Then, {code (native-translated-namestring p)} evaluates
+	  to "a.b.c".  By contrast, {code (namestring p)} evaluates
+	  to "a\\\\.b.c".
+	|))
+        (definition (:macro with-filename-cstrs)
+         "with-filename-cstrs ( {lbrace}(var value){rbrace}* ) {lbrace}form{rbrace}*" "
+	    Suitably encode strings to be used as filenames for foreign code.
+	  "
+         (defsection "Description"
+           (para "
+	  Executes {param forms} in an environemt in which each
+	  {param var} is bound to a stack-allocated foreign
+	  pointer which refers to a C-style string suitable for passing
+	  to foreign code which expects a filename argument.
+	")
+           (para "
+	  For example, one might use this macro in the following way:
+  "
+            (code-block "
+(with-filename-cstrs ((s (native-translated-namestring pathname)))
+  (#_unlink s))
+  "))
+           (para "
+	  Various operating systems have different conventions for how
+	  they expect native pathname strings to be encoded.  Darwin
+	  expects then to be decomposed UTF-8.  The Unicode variants
+	  to Windows file-handling functions expect UTF-16.  Other
+	  systems just treat them as opaque byte sequences.  This macro
+	  ensures that the correct encoding is used, whatever
+	  the host operating system.
+	")))))
+    (defsection "OS X (Darwin)" (para "{CCL} assumes that pathname strings are decomposed UTF-8."))
+    (defsection "Linux"
+      (para "Pathname strings are treated as null-terminated strings
+        coded in the encoding named by the value returned by the function
+      {function pathname-encoding-name}.  This value may be changed
+      with {function setf}."))
+    (defsection "FreeBSD"
+      (para "Pathname strings are treated as null-terminated strings
+        encoded according to the current locale; a future release may
+        change this convention to use UTF-8.")))
+  (defsection "Memory-mapped Files"
+    (para "In release 1.2 and later, {CCL}
+      supports "
+     (ref (glossentry "memory-mapped file") "memory-mapped files") ". On operating systems that support memory-mapped
+      files (including Mac OS X, Linux, and FreeBSD), the operating
+      system can arrange for a range of virtual memory addresses to
+      refer to the contents of an open file. As long as the file remains
+      open, programs can read values from the file by reading addresses
+      in the mapped range.")
+    "Using memory-mapped files may in some cases be more
+      efficient than reading the contents of a file into a data
+      structure in memory.
+
+      {CCL} provides the
+      functions {function map-file-to-ivector}
+      and {function map-file-to-octet-vector} to support
+      memory-mapping. These functions return vectors whose contents are
+      the contents of memory-mapped files. Reading an element of such a
+      vector returns data from the corresponding position in the
+      file.
+
+      Without memory-mapped files, a common idiom for reading the
+      contents of files might be something like this:"
+    (code-block "
+(let* ((stream (open pathname :direction :input :element-type '(unsigned-byte 8)))
+       (vector (make-array (file-size-to-vector-size stream)
+                           :element-type '(unsigned-byte 8))))
+  (read-sequence vector stream))
+    ")
+    "Using a memory-mapped files has a result that is the same in
+      that, like the above example, it returns a vector whose contents are
+      the same as the contents of the file. It differs in that the above
+      example creates a new vector in memory and copies the file's
+      contents into it; using a memory-mapped file instead arranges for
+      the vector's elements to point to the file's contents on disk
+      directly, without copying them into memory first.
+
+      The vectors returned by {function map-file-to-ivector}
+      and {function map-file-to-octet-vector} are read-only; any
+      attempt to change an element of a vector returned by these
+      functions results in a memory-access error. {CCL} does not
+      currently support writing data to memory-mapped files.
+
+      Vectors created by {function map-file-to-ivector}
+      and {function map-file-to-octet-vector} are required to
+      respect {CCL}'s limit on the total size of an array. That means
+      that you cannot use these functions to create a vector longer
+      than {variable array-total-size-limit}, even if the filesystem
+      supports file sizes that are larger. The value
+      of {variable array-total-size-limit} is {code (EXPT 2 24)}
+      on 32-but platforms; and {code (EXPT 2 56)} on 64-bit
+      platforms."
+    (definition (:function map-file-to-ivector) "CCL:MAP-FILE-TO-IVECTOR pathname element-type" nil
+     (defsection "Description"
+       (listing :definition
+         (item "{param pathname}" ccldoc::=> "The pathname of the file to be memory-mapped.")
+         (item "{param element-type}" ccldoc::=> "The element-type of the vector to be
+            created. Specified as
+            a "
+          (term "type-specifier") "
+            that names a subtype of either {code SIGNED-BYTE}
+            or {code UNSIGNED-BYTE}."))
+       (para "
+      The {function map-file-to-ivector} function tries to
+      open the file at {param pathname} for reading. If
+      successful, the function maps the file's contents to a range of
+      virtual addresses. If successful, it returns a read-only vector
+      whose element-type is given
+      by {param element-type}, and whose contents are
+      the contents of the memory-mapped file.
+    ")
+       (para "The returned vector is
+      a "
+        (ref (glossentry "displaced array") "displaced-array") "
+      whose element-type is {code (UPGRADED-ARRAY-ELEMENT-TYPE
+        element-type)}. The target of the displaced array is a
+      vector of type {code (SIMPLE-ARRAY element-type (*))} whose
+      elements are the contents of the memory-mapped file.")
+       "Because of alignment issues, the mapped file's contents
+      start a few bytes (4 bytes on 32-bit platforms, 8 bytes on
+      64-bit platforms) into the vector. The displaced array returned
+      by {function map-file-to-ivector} hides this overhead, but
+      it's usually more efficient to operate on the underlying simple
+      1-dimensional array.  Given a displaced array (like the value
+      returned by {function map-file-to-ivector}), the function
+      {function array-displacement} returns the underlying array and
+      the displacement index in elements.
+    
+
+      Currently, {CCL} supports only read operations on
+      memory-mapped files. If you try to change the contents of an array
+      returned by {function map-file-to-ivector}, {CCL} signals
+      a memory error."))
+    (definition (:function unmap-ivector) "CCL:UNMAP-IVECTOR displaced-array" nil
+     (defsection "Description"
+       (para "If the argument is a displaced-array returned
+      by {function map-file-to-ivector}, and if it has not yet
+      been unmapped by this function,
+      then {function unmap-ivector} undoes the memory mapping,
+      closes the mapped file, and changes the displaced-array so that its
+      target is an empty vector (of length zero).")))
+    (definition (:function map-file-to-octet-vector) "CCL:MAP-FILE-TO-OCTET-VECTOR displaced-array" nil
+     (defsection "Description"
+       (para "This function is a synonym for {code (CCL:MAP-FILE-TO-IVECTOR
+        pathname '(UNSIGNED-BYTE 8))} It is provided as a convenience
+      for the common case of memory-mapping a file as a vector of
+      bytes.")))
+    (definition (:function unmap-octet-vector) "CCL:UNMAP-OCTET-VECTOR displaced-array" nil
+     (defsection "Description"
+       (para "This function is a synonym
+      for {function unmap-ivector}"))))
+  (defsection "Static Variables"
+    (para "{CCL} supports the definition
+      of "
+     (ref (glossentry "static variable") "static variables") ", whose values are the same across threads,
+      and which may not be dynamically bound. The value of a static
+      variable is thus the same across all threads; changing the value
+      in one thread changes it for all threads.")
+    "Attempting to dynamically rebind a static variable (for
+      instance, by using {code LET}, or using the variable name as
+      a parameter in a {code LAMBDA} form) signals an
+      error. Static variables are shared global resources; a dynamic
+      binding is private to a single thread.
+
+      Static variables therefore provide a simple way to share
+      mutable state across threads. They also provide a simple way to
+      introduce race conditions and obscure bugs into your code, since
+      every thread reads and writes the same instance of a given static
+      variable. You must take care, therefore, in how you change the
+      values of static variables, and use normal multithreaded
+      programming techniques, such as locks or semaphores, to protect
+      against race conditions.
+
+      In {CCL}, access to a static variable is usually faster than
+      access to a special variable that has not been declared
+      static."
+    (definition (:macro defstatic) "DEFSTATIC var value {code &key} doc-string" nil
+     (defsection "Description"
+       (listing :definition
+         (item "{param var}" ccldoc::=> "The name of the new static variable.")
+         (item "{param value}" ccldoc::=> "The initial value of the new static variable.")
+         (item "{param doc-string}" ccldoc::=> "A documentation string that is assigned to the new
+            variable."))
+       (para "Proclaims the
+      variable "
+        (ref (glossentry "special variable") "special") ",
+      assigns the variable the supplied value, and assigns
+      the {param doc-string} to the
+      variable's {code VARIABLE} documentation. Marks the
+      variable static, preventing any attempt to dynamically rebind
+      it. Any attempt to dynamically rebind {param var}
+      signals an error."))))
+  (defsection "Saving Applications"
+    nil
+    (para "{CCL} provides the
+      function {code CCL:SAVE-APPLICATION}, which creates a file
+      containing an archived Lisp memory image.")
+    (para "{CCL} consists of a small executable called the
+      Lisp "
+     (ref (glossentry "image") "kernel") ", which
+      implements the very lowest level features of the Lisp system, and
+      an "
+     (term "image") ", which
+      contains the in-memory representation of most of the Lisp system,
+      including functions, data structures, variables, and so on. When
+      you start {CCL}, you are launching the kernel, which then locates
+      and reads an image file, restoring the archived image in
+      memory. Once the image is fully restored, the Lisp system is
+      running.")
+    "Using {code CCL:SAVE-APPLICATION}, you can create a
+      file that contains a modified image, one that includes any changes
+      you've made to the running Lisp system. If you later pass your
+      image file to the {CCL} kernel as a command-line parameter, it
+      then loads your image file instead of its default one, and {CCL}
+      starts up with your modifications.
+
+      If this scenario seems to you like a convenient way to
+      create an application, that's just as intended. You can create an
+      application by modifying the running Lisp until it does what you
+      want, then use {code CCL:SAVE-APPLICATION} to preserve your
+      changes and later load them for use."
+    (para "In fact, you can go further than that. You can replace
+      {CCL}'s "
+     (term "toplevel function") " with your own, and then, when the image is
+      loaded, the Lisp system immediately performs your tasks rather
+      than the default tasks that make it a Lisp development system. If
+      you save an image in which you have done this, the resulting Lisp
+      system is your tool rather than a Lisp development system.")
+    "You can go a step further still. You can
+      tell {code CCL:SAVE-APPLICATION} to prepend the Lisp kernel
+      to the image file. Doing this makes the resulting image into a
+      self-contained executable binary. When you run the resulting file,
+      the Lisp kernel immediately loads the attached image file and runs
+      your saved system. The Lisp system that starts up can have any
+      behavior you choose. It can be a Lisp development system, but with
+      your customizations; or it can immediately perform some task of
+      your design, making it a specialized tool rather than a general
+      development system.
+
+      In other words, you can develop any application you like by
+      interactively modifying {CCL} until it does what you want, then
+      using {code CCL:SAVE-APPLICATION} to preserve your changes
+      in an executable image."
+    (para "On Mac OS X,
+      the "
+     (ref (section "The Application Builder") "application builder") "
+      uses {code CCL:SAVE-APPLICATION} to create the executable
+      portion of the "
+     (term "application bundle") ". Double-clicking the application bundle runs
+      the executable image created
+      by {code CCL:SAVE-APPLICATION}.")
+    "Also on Mac OS X, {CCL} supports an object type
+      called {code MACPTR}, which is the type of pointers into the
+      foreign (Mac OS) heap. Examples of
+      commonly-user {code MACPTR} objects are Cocoa windows and
+      other dynamically-allocated Mac OS system objects.
+
+      Because a {code MACPTR} object is a pointer into a
+      foreign heap that exists for the lifetime of the running Lisp
+      process, and because a saved image is used by loading it into a
+      brand new Lisp process, saved {code MACPTR} objects cannot
+      be relied on to point to the same things when reconstituted from a
+      saved image. In fact, a restored {code MACPTR} object might
+      point to anything at all-for example an arbitrary location
+      in the middle of a block of code, or a completely nonexistent
+      virtual address.
+
+      For that reason, {code CCL:SAVE-APPLICATION} converts
+      all {code MACPTR} objects to {code DEAD-MACPTR}
+      objects when writing them to an image
+      file. A {code DEAD-MACPTR} is functionally identical to
+      a {code MACPTR}, except that code that operates
+      on {code MACPTR} objects distinguishes them
+      from {code DEAD-MACPTR} objects and can handle them
+      appropriately-signaling errors, for example.
+
+      As of {CCL} 1.2, there is one exception to the conversion
+      of {code MACPTR} to {code DEAD-MACPTR} objects:
+      a {code MACPTR} object that points to the address 0 is not
+      converted, because address 0 can always be relied upon to refer to
+      the same thing."
+    nil
+    "As of {CCL} 1.2, the constant {code CCL:+NULL-PTR+}
+      refers to a {code MACPTR} object that points to address 0.
+
+      On all supported platforms, you can
+      use {code CCL:SAVE-APPLICATION} to create a command-line
+      tool that runs the same way any command-line program
+      does. Alternatively, if you choose not to prepend the kernel, you
+      can save an image and then later run it by passing it as a
+      command-line parameter to the {code ccl}
+      or {code ccl64} script."
+    (definition (:function save-application)
+     "SAVE-APPLICATION filename {code &key} toplevel-function init-file error-handler application-class clear-clos-caches (purify t) impurify (mode #o644) prepend-kernel native"
+     nil
+     (defsection "Description"
+       (listing :definition
+         (item "{param filename}" ccldoc::=> "The pathname of the file to be created when {CCL}
+            saves the application.")
+         (item "{param toplevel-function}" ccldoc::=>
+          (para "The function to be executed after startup is
+            complete. The toplevel is a function of no arguments that
+            performs whatever actions the lisp system should perform
+            when launched with this image.")
+          (para "If this parameter is not supplied, {CCL} uses its
+            default toplevel. The default toplevel runs
+            the "
+           (ref (glossentry "REPL") "read-eval-print loop") "."))
+         (item "{param init-file}" ccldoc::=> "The pathname of a Lisp file to be loaded when the
+            image starts up. You can place initialization expressions in
+            this file, and use it to customize the behavior of the Lisp
+            system when it starts up.")
+         (item "{param error-handler}" ccldoc::=> "The error-handling mode for the saved image. The
+            supplied value determines what happens when an error is not
+            handled by the saved image. Valid values
+            are {code :quit} (Lisp exits with an error
+            message); {code :quit-quietly} (Lisp exits without an
+            error message); or {code :listener} (Lisp enters a
+            break loop, enabling you to debug the problem by interacting
+            in a listener). If you don't supply this parameter, the
+            saved image uses the default error handler
+            ({code :listener}).")
+         (item "{param application-class}" ccldoc::=> "The CLOS class that represents the saved Lisp
+            application. Normally you don't need to supply this
+            parameter; {code CCL:SAVE-APPLICATION} uses the
+            class {code CCL:LISP-DEVELOPMENT-SYSTEM}. In some
+            cases you may choose to create a custom application class;
+            in that case, pass the name of the class as the value for
+            this parameter.")
+         (item "{param clear-clos-caches}" ccldoc::=> "If true, ensures that CLOS caches are emptied before
+            saving the image. Normally you don't need to supply this
+            parameter, but if for some reason you want to ensure the
+            CLOS caches are clear when the image starts up, you can pass
+            any true value.")
+         (item "{param purify}" ccldoc::=> "
+	    When true, calls (in effect) {code purify} before
+	    saving the heap image.  This moves certain objects that
+	    are unlikely to become garbage to a special memory area
+	    that is not scanned by the GC (since it is expected that
+	    the GC wouldn't find anything to collect).
+         ")
+         (item "{param impurify}" ccldoc::=> "
+	    If true, calls (in effect) {code impurify} before
+	    saving the heap image.  (If both {code :impurify}
+	    and {code :purify} are true, first
+	    {code impurify} is done, and then {code purify}.)
+         
+
+	   {code impurify} moves objects in certain special memory
+	   areas into the regular dynamic heap, where they will be scanned
+	   by the GC.
+	 ")
+         (item "{param mode}" ccldoc::=> "
+	    A number specifying the mode (permission bits) of the output file.
+	  ")
+         (item "{param prepend-kernel}" ccldoc::=> "Specifies the file to prepend to the saved heap
+	  image.  A value of {code t} means to prepend
+	  the lisp kernel binary that the lisp started with.
+	  Otherwise, the value of {code :prepend-kernel}
+	  should be a pathname designator for the file to be
+	  prepended.
+         
+
+
+	   If the prepended file is execuatable, its execute
+	   mode bits will be copied to the output file.
+	 
+
+
+	   This argument can be used to prepend any kind of file to
+	   the saved heap image.  This can be useful in some special
+	   cases.
+	 ")
+         (item "{param native}" ccldoc::=> "If true, saves the image as a native (ELF, Mach-O, PE)
+          shared library.  (On platforms where this isn't yet supported,
+          a warning is issued and the option is ignored.)
+         "))))
+    (para))
+  (defsection "Concatenating FASL Files"
+    (para "
+      Multiple fasl files can be concatenated into a single file.
+    ")
+    (definition (:function fasl-concatenate) "fasl-concatenate out-file fasl-files {code &key} (:if-exists :error)" "
+	Concatenate several fasl files, producing a single output file.
+      "
+     (defsection "Arguments and Values"
+       (listing :definition
+         (item "{param out-file}" ccldoc::=> "
+	      Name of the file in which to store the concatenation.
+	    ")
+         (item "{param fasl-files}" ccldoc::=> "
+	      List of names of fasl files to concatenate.
+	    ")
+         (item "{param if-exists}" ccldoc::=> "
+	      As for {function open}, defaults to {code 
+	      :error}")))
+     (defsection "Description"
+       "
+	Creates a fasl file which, when loaded, will have the same
+	effect as loading the individual input fasl files in the
+	specified order.  The single file might be easier to
+	distribute or install, and loading it may be at least a little
+	faster than loading the individual files (since it avoids the
+	overhead of opening and closing each file in succession.)
+      
+
+
+	The PATHNAME-TYPE of the output file and of each input file
+	defaults to the current platform's fasl file type (.dx64fsl or
+	whatever.)  If any of the input files has a different
+	type/extension an error will be signaled, but it doesn't
+	otherwise try too hard to verify that the input files are real
+	fasl files for the current platform.
+      ")))
+  (defsection "Floating Point Numbers"
+    "
+      In {CCL}, the Common Lisp types short-float and single-float are
+      implemented as IEEE single precision values; double-float and
+      long-float are IEEE double precision values.  On 64-bit
+      platforms, single-floats are immediate values (like fixnums and
+      characters).
+    
+
+
+    Floating-point exceptions are generally enabled and detected.  By
+    default, threads start up with overflow, division-by-zero, and
+    invalid enabled, and the rounding mode is set to nearest. The
+    functions {function set-fpu-mode} and
+    {function get-fpu-mode} provide user control over
+    floating-point behavior.
+  "
+    (definition (:function get-fpu-mode) "get-fpu-mode {code &optional} mode" "
+	Return the state of exception-enable and rounding-mode control
+	flags for the current thread.
+      "
+     (defsection "Arguments and Values"
+       (listing :definition
+         (item "{param mode}" ccldoc::=> "
+	      One of the keywords :rounding-mode, :overflow,
+	      :underflow, :division-by-zero, :invalid, :inexact.
+	    ")))
+     (defsection "Description"
+       "
+	If {param mode} is supplied, returns the value of
+	the corresponding control flag for the current thread.
+      
+
+
+	Otherwise, returns a list of keyword/value pairs which
+	describe the floating-point exception-enable and rounding-mode
+	control flags for the current thread.
+      "
+       (listing :definition
+         (item "rounding-mode" ccldoc::=> "
+	      One of :nearest, :zero, :positive, :negative
+	    ")
+         (item "overflow, underflow, division-by-zero, invalid, inexact
+	  "
+          ccldoc::=> "
+	      If true, the floating-point exception is signaled.
+	      If NIL, it is masked.
+	    "))))
+    (definition (:function set-fpu-mode)
+     "set-fpu-mode {code &key} rounding-mode overflow underflow division-by-zero invalid inexact" "
+	Set the state of exception-enable and rounding-mode control
+	flags for the current thread.
+      "
+     (defsection "Arguments and Values"
+       (listing :definition
+         (item "{param rounding-mode}" ccldoc::=> "
+	      If supplied, must be one of :nearest, :zero, :positive, or
+	      :negative.
+	    ")
+         (item "{param overflow}, {param underflow}, {param division-by-zero}, {param invalid}, {param inexact}"
+          ccldoc::=> "NIL to mask the exception, T to signal it.")))
+     (defsection "Description"
+       (para "
+	Sets the current thread's exception-enable and rounding-mode
+	control flags to the indicated values for arguments that are
+	supplied, and preserves the values assoicated with those
+	that aren't supplied.
+      "))))
+  (defsection "Watched Objects"
+    (para "
+    As of release 1.4, Clozure CL provides a way for lisp objects to
+    be watched so that a condition will be signaled when a thread
+    attempts to write to the watched object. For a certain class of
+    bugs (someone is changing this value, but I don't know who), this
+    can be extremely helpful.
+  ")
+    (defsection "WATCH"
+      (definition (:function watch) "watch {code &optional} object" "
+	Monitor a lisp object for writes.
+      "
+       (defsection "Arguments and Values"
+         (listing :definition
+           (item "{param object}" ccldoc::=> "
+	      Any memory-allocated lisp object.
+	    ")))
+       (defsection "Description"
+         "
+	The WATCH function arranges for the specified object to be
+	monitored for writes. This is accomplished by copying the
+	object to its own set of virtual memory pages, which are then
+	write-protected. This protection is enforced by the computer's
+	memory-management hardware; the write-protection does not slow
+	down reads at all.
+      
+
+
+	When any write to the object is attempted, a
+	WRITE-TO-WATCHED-OBJECT condition will be signaled.
+      
+
+
+	When called with no arguments, WATCH returns a freshly-consed
+	list of the objects currently being watched.
+      
+
+
+	WATCH returns NIL if the object cannot be watched (typically
+	because the object is in a static or pure memory area).
+      ")
+       (defsection "DWIM"
+         (para "
+      WATCH operates at a fairly low level; it is not possible to
+      avoid the details of the internal representation of objects.
+      Nevertheless, as a convenience, WATCHing a standard-instance,
+      a hash-table, or a multi-dimensional or non-simple CL array
+      will watch the underlying slot-vector, hash-table-vector, or
+      data-vector, respectively.
+      "))
+       (defsection "Discussion"
+         "
+      WATCH can monitor any memory-allocated lisp object.
+    
+
+
+      In Clozure CL, a memory-allocated object is either a cons cell
+      or a uvector.
+    
+
+
+      WATCH operates on cons cells, not lists. In order to watch a
+      chain of cons cells, each cons cell must be watched
+      individually. Because each watched cons cell takes up its own
+      own virtual memory page (4 Kbytes), it's only feasible to watch
+      relatively short lists.
+    
+
+
+      If a memory-allocated object isn't a cons cell, then it is a
+      vector-like object called a uvector. A uvector is a
+      memory-allocated lisp object whose first word is a header that
+      describes the object's type and the number of elements that it
+      contains.
+    
+
+
+      So, a hash table is a uvector, as is a string, a standard
+      instance, a double-float, a CL array or vector, and so forth.
+    
+
+
+      Some CL objects, like strings and other simple vectors, map in a
+      straightforward way onto the uvector representation. It is easy
+      to understand what happens in such cases. The uvector index
+      corresponds directly to the vector index:
+    "
+         (code-block #:|
+? (defvar *s* "xxxxx")
+*S*
+? (watch *s*)
+"xxxxx"
+? (setf (char *s* 3) #\\o)
+> Error: Write to watched uvector "xxxxx" at index 3
+>        Faulting instruction: (movl (% eax) (@ -5 (% r15) (% rcx)))
+> While executing: SET-CHAR, in process listener(1).
+> Type :POP to abort, :R for a list of available restarts.
+> Type :? for other options.
+|)
+         #:|
+      In the case of more complicated objects (e.g., a hash-table, a
+      standard-instance, a package, etc.), the elements of the uvector
+      are like slots in a structure. It's necessary to know which one
+      of those "slots" contains the data that will be changed when the
+      object is written to.
+    
+
+
+      As mentioned above, watch knows about arrays, hash-tables, and
+      standard-instances, and will automatically watch the appropriate
+      data-containing element.
+    
+
+
+      An example might make this clearer.
+    |
+         (code-block "
+? (defclass foo ()
+    (slot-a slot-b slot-c))
+#<STANDARD-CLASS FOO>
+? (defvar *a-foo* (make-instance 'foo))
+*A-FOO*
+? (watch *a-foo*)
+#<SLOT-VECTOR #xDB00D>
+;;; Note that WATCH has watched the internal slot-vector object
+? (setf (slot-value *a-foo* 'slot-a) 'foo)
+> Error: Write to watched uvector #<SLOT-VECTOR #xDB00D> at index 1
+>        Faulting instruction: (movq (% rsi) (@ -5 (% r8) (% rdi)))
+> While executing: %MAYBE-STD-SETF-SLOT-VALUE-USING-CLASS, in process listener(1).
+> Type :POP to abort, :R for a list of available restarts.
+> Type :? for other options.
+")
+         "
+      Looking at a backtrace would presumably show what object and
+      slot name were written.
+    
+
+
+      Note that even though the write was to slot-a, the uvector index
+      was 1 (not 0). This is because the first element of a
+      slot-vector is a pointer to the instance that owns the slots. We
+      can retrieve that to look at the object that was modified:
+    "
+         (code-block "
+1 > (uvref (write-to-watched-object-object *break-condition*) 0)
+#<FOO #x30004113502D>
+1 > (describe *)
+#<FOO #x30004113502D>
+Class: #<STANDARD-CLASS FOO>
+Wrapper: #<CLASS-WRAPPER FOO #x300041135EBD>
+Instance slots
+SLOT-A: #<Unbound>
+SLOT-B: #<Unbound>
+SLOT-C: #<Unbound>
+1 >
+"))))
+    (defsection "UNWATCH"
+      (definition (:function unwatch) "unwatch object" "
+	Stop monitoring a lisp object for writes.
+      "
+       (defsection "Description"
+         (para "
+    The UNWATCH function ensures that the specified object is in
+    normal, non-monitored memory. If the object is not currently
+    being watched, UNWATCH does nothing and returns NIL. Otherwise,
+    the newly unwatched object is returned.
+  "))))
+    (defsection "WRITE-TO-WATCHED-OBJECT"
+      (definition (:condition ccl::write-to-watched-object) "WRITE-TO-WATCHED-OBJECT" "
+	Condition signaled when a write to a watched object is attempted.
+      "
+       (defsection "Discussion"
+         (para "
+      This condition is signaled when a watched object is written
+      to. There are three slots of interest:
+    ")
+         (listing :definition
+           (item "object" ccldoc::=> "
+	    The actual object that was the destination of the write.
+	  ")
+           (item "offset" ccldoc::=> "
+	    The byte offset from the tagged object pointer to the
+	    address of the write.
+	  ")
+           (item "instruction" ccldoc::=> "
+	    The disassembled machine instruction that attempted the write.
+	  ")))
+       (defsection "Restarts"
+         "
+      A few restarts are provided: one will skip over the faulting
+      write instruction and proceed; another offers to unwatch the
+      object and continue.
+    
+
+
+      There is also an emulate restart. In some common cases, the
+      faulting write instruction can be emulated, enabling the write
+      to be performed without having to unwatch the object (and
+      therefore let other threads potentially write to it). If the
+      faulting instruction isn't recognized, the emulate restart will
+      not be offered.
+    ")))
+    (defsection "Notes"
+      "
+  Although some care has been taken to minimize potential problems
+  arising from watching and unwatching objects from multiple
+  threads, there may well be subtle race conditions present that
+  could cause bad behavior.
+
+
+
+  For example, suppose that a thread attempts to write to a watched
+  object. This causes the operating system to generate an
+  exception. The lisp kernel figures out what the exception is, and
+  calls back into lisp to signal the write-to-watched-object
+  condition and perhaps handle the error.
+
+
+
+  Now, as soon lisp code starts running again (for the callback),
+  it's possible that some other thread could unwatch the very
+  watched object that caused the exception, perhaps before we even
+  have a chance to signal the condition, much less respond to it.
+
+
+
+  Having the object unwatched out from underneath a handler may at
+  least confuse it, if not cause deeper trouble. Use caution with
+  unwatch.
+")
+    (defsection "Examples"
+      (para "
+  Here are a couple more examples in addition to the above examples
+  of watching a string and a standard-instance.
+")
+      (defsection "Fancy arrays"
+        (code-block "
+?  (defvar *f* (make-array '(2 3) :element-type 'double-float))
+*F*
+? (watch *f*)
+#(0.0D0 0.0D0 0.0D0 0.0D0 0.0D0 0.0D0)
+;;; Note that the above vector is the underlying data-vector for the array
+? (setf (aref *f* 1 2) pi)
+> Error: Write to watched uvector #<VECTOR 6 type DOUBLE-FLOAT, simple> at index 5
+>        Faulting instruction: (movq (% rax) (@ -5 (% r8) (% rdi)))
+> While executing: ASET, in process listener(1).
+> Type :POP to abort, :R for a list of available restarts.
+> Type :? for other options.
+1 > 
+  ")
+        (para "
+    In this case, uvector index in the report is the row-major index
+    of the element that was written to.
+  "))
+      (defsection "Hash tables"
+        "
+    Hash tables are surprisingly complicated. The representation of a
+    hash table includes an element called a hash-table-vector. The
+    keys and values of the elements are stored pairwise in this
+    vector.
+  
+
+
+    One problem with trying to monitor hash tables for writes is that
+    the underlying hash-table-vector is replaced with an entirely new
+    one when the hash table is rehashed. A previously-watched
+    hash-table-vector will not be the used by the hash table after
+    rehashing, and writes to the new vector will not be caught.
+  "
+        (code-block "
+? (defvar *h* (make-hash-table))
+*H*
+? (setf (gethash 'noise *h*) 'feep)
+FEEP
+? (watch *h*)
+#<HASH-TABLE-VECTOR #xDD00D>
+;;; underlying hash-table-vector
+? (setf (gethash 'noise *h*) 'ding)
+> Error: Write to watched uvector #<HASH-TABLE-VECTOR #xDD00D> at index 35
+>        Faulting instruction: (lock)
+>          (cmpxchgq (% rsi) (@ (% r8) (% rdx)))
+> While executing: %STORE-NODE-CONDITIONAL, in process listener(1).
+> Type :POP to abort, :R for a list of available restarts.
+> Type :? for other options.
+;;; see what value is being replaced...
+1 > (uvref (write-to-watched-object-object *break-condition*) 35)
+FEEP
+;;; backtrace shows useful context
+1 > :b
+*(1A109F8) : 0 (%STORE-NODE-CONDITIONAL ???) NIL
+ (1A10A50) : 1 (LOCK-FREE-PUTHASH NOISE #<HASH-TABLE :TEST EQL size 1/60 #x30004117D47D> DING) 653
+ (1A10AC8) : 2 (CALL-CHECK-REGS PUTHASH NOISE #<HASH-TABLE :TEST EQL size 1/60 #x30004117D47D> DING) 229
+ (1A10B00) : 3 (TOPLEVEL-EVAL (SETF (GETHASH # *H*) 'DING) NIL) 709
+ ...
+  "))
+      (defsection "Lists"
+        (para "
+    As previously mentioned, WATCH only watches individual cons cells.
+  ")
+        (code-block "
+? (defun watch-list (list)
+    (maplist #'watch list))
+WATCH-LIST
+? (defvar *l* (list 1 2 3))
+*L*
+? (watch-list *l*)
+((1 2 3) (2 3) (3))
+? (setf (nth 2 *l*) 'foo)
+> Error: Write to the CAR of watched cons cell (3)
+>        Faulting instruction: (movq (% rsi) (@ 5 (% rdi)))
+> While executing: %SETNTH, in process listener(1).
+> Type :POP to abort, :R for a list of available restarts.
+> Type :? for other options.
+  "))))
+  (defsection "Code Coverage"
+    (defsection "Overview"
+      (para "
+  In Clozure CL 1.4 and later, code coverage provides information
+  about which paths through generated code have been executed and
+  which haven't. For each source form, it can report one of three
+  possible outcomes:
+")
+      (listing :bullet
+        (item "
+      Not covered: this form was never entered.
+    ")
+        (item "
+      Partly covered: This form was entered, and some parts were
+      executed and some weren't.
+    ")
+        (item "
+      Fully covered: Every bit of code generated from this form was
+      executed.
+    ")))
+    (defsection "Limitations"
+      "
+  While the information gathered for coverage of generated code is
+  complete and precise, the mapping back to source forms is of
+  necessity heuristic, and depends a great deal on the behavior of
+  macros and the path of the source forms through compiler
+  transforms. Source information is not recorded for variables, which
+  further limits the source mapping. In practice, there is often
+  enough information scattered about a partially covered function to
+  figure out which logical path through the code was taken and which
+  wasn't. If that doesn't work, you can try disassembling to see which
+  parts of the compiled code were not executed: in the disassembled
+  code there will be references to #<CODE-NOTE [xxx] ...> where xxx
+  is NIL if the code that follows was never executed and non-NIL if it
+  was.
+
+
+
+  Sometimes the situation can be improved by modifying macros to try
+  to preserve more of the input forms, rather than destructuring and
+  rebuilding them.
+"
+      (para "
+  Because the code coverage information is associated with compiled
+  functions, code coverage information is not available for load-time toplevel
+  expressions.  You can work around this by creating a function and calling
+  it. I.e. instead of
+  "
+       (code-block "
+(progn
+  (do-this)
+  (setq that ...) ...))")
+       "
+  do:
+  "
+       (code-block "
+(defun init-this-and-that ()
+  (do-this)
+  (setq that ...)  ...)
+(init-this-and-that)")
+       "
+
+Then you can see the coverage information in the definition of
+{code init-this-and-that}.
+"))
+    (defsection "Usage"
+      (para "
+  In order to gather code coverage information, you first have to
+  recompile all your code to include code coverage
+  instrumentation. Compiling files will generate code coverage
+  instrumentation if {code CCL:*COMPILE-CODE-COVERAGE*}
+  is true:
+  "
+       (code-block "
+(setq ccl:*compile-code-coverage* t) 
+(recompile-all-your-files)"))
+      "
+  The compilation process will be many times slower than normal, and
+  the fasl files will be many times bigger.
+
+
+
+  When you execute functions loaded from instrumented fasl files, they
+  will record coverage information every time they are executed. 
+  You can examine that information by calling {code ccl:report-coverage}
+  or {code ccl:coverage-statistics}.
+"
+      (para "
+   While recording coverage, you can collect incremental coverage deltas between any two points
+   in time.  You might do this while running a test suite, to record the coverage for
+   each test, for example:
+  "
+       (code-block "
+(ccl:reset-incremental-coverage)
+(loop with coverage = (make-hash-table)
+      for test in (tests-to-run)
+      do (run-test test)
+      do (setf (gethash test coverage) (ccl:get-incremental-coverage))
+      finally (return coverage))")
+       "creates a hash table mapping a test to a representation of all coverage recorded while running the
+   test.  This hash table can then be passed to {code ccl:report-coverage}, {code ccl:incremental-coverage-svn-matches}
+   or {code ccl:incremental-coverage-source-matches}.
+"))
+    (defsection "Functions and Variables"
+      (para "
+  The following functions can be used to manage the coverage data:
+")
+      (definition (:function report-coverage)
+       "report-coverage output-file {code &key} (tags nil) (external-format :default) (statistics t) (html t)"
+       "Generate a code coverage report"
+       (defsection "Arguments and Values"
+         (listing :definition
+           (item "{param output-file}" ccldoc::=> "
+          Pathname for the output index file.
+	")
+           (item "{param html}" ccldoc::=> "
+	  If non-nil (the default), this will generate an HTML report, consisting of
+	  an index file in {param output-file} and, in the same directory,
+          one html file for each instrumented source file that has been loaded in the
+          current session.
+	")
+           (item "{param tags}" ccldoc::=> "
+	  If non-nil, this should be a hash table mapping arbitrary keys (tags) to incremental coverage deltas.  The
+          HTML report will show a list of tags, and allow selection of an arbitrary subset of them to show the
+          coloring and statistics for coverage by that subset.
+	")
+           (item "{param external-format}" ccldoc::=> "
+	  Controls the external format of the html files.
+	")
+           (item "{param statistics}" ccldoc::=> #:|
+	  If non-nil (the default), a comma-separated file is 
+	  generated with the summary of statistics. You can specify a
+	  filename for the statistics argument, otherwise
+	  "statistics.csv" is created in the directory of {param output-file}.
+          See documentation of coverage-statistics below for a
+	  description of the values in the statistics file.
+	|)))
+       (defsection "Example"
+         (para "
+      If you've loaded {system foo.lx64fsl} and
+      {system bar.lx64fsl}, and have run some tests, you could
+      do
+    "
+          (code-block #:|
+(REPORT-COVERAGE "/my/dir/coverage/report.html")
+    |)
+          "
+    and this would generate {system report.html},
+    {system foo_lisp.html} and
+    {system bar_lisp.html}, and
+    {system statistics.csv} all in
+    {system /my/dir/coverage/}.
+    ")))
+      (definition (:function reset-coverage) "RESET-COVERAGE" #:|
+      Resets all coverage data back to the "Not Executed" state
+    |
+       (defsection "Description"
+         (para #:|
+      Resets all coverage data back to the "Not Executed" state
+    |)))
+      (definition (:function clear-coverage) "CLEAR-COVERAGE" "
+      Forget about all instrumented files that have been loaded.
+    "
+       (defsection "Description"
+         (para "
+      Gets rid of the information about which instrumented files have
+      been loaded, so {code ccl:report-coverage} will not report any files,
+      and {code ccl:save-coverage-in-file} will not save any info, until more
+      instrumented files are loaded.
+    ")))
+      (definition (:function save-coverage-in-file) "save-coverage-in-file pathname" "
+      Save all coverage into to a file so you can restore it later.
+    "
+       (defsection "Description"
+         (para "
+      Saves all coverage info in a file, so you can restore the
+      coverage state later. This allows you to combine multiple runs
+      or continue in a later session. Equivalent to
+      {code (ccl:write-coverage-to-file (ccl:get-coverage) pathname)}.
+    ")))
+      (definition (:function restore-coverage-from-file) "restore-coverage-from-file pathname" "
+      Load coverage state from a file.
+    "
+       (defsection "Description"
+         (para #:|
+      Restores the coverage data previously saved with
+      ccl:save-coverage-in-file, for the set of instrumented fasls
+      that were loaded both at save and restore time. I.e. coverage
+      info is only restored for files that have been loaded in this
+      session. For example if in a previous session you had loaded
+      {system "foo.lx86fsl"} and then saved the coverage info, in this session
+      you must load the same {system "foo.lx86fsl"} before calling
+      {code restore-coverage-from-file} in order to retrieve the stored
+      coverage info for "foo".  Equivalent to {code (ccl:restore-coverage
+      (ccl:read-coverage-from-file pathname))}.
+    |)))
+      (definition (:function get-coverage) "GET-COVERAGE" "
+      Returns a snapshot of the current coverage data.
+    "
+       (defsection "Description"
+         (para "
+      Returns a snapshot of the current coverage data. A snapshot is a
+      copy of the current coverage state. It can be saved in a file
+      with {code ccl:write-coverage-to-file}, reinstated back as the current
+      state with {code ccl:restore-coverage}, or combined with other
+      snapshots with {code ccl:combine-coverage}.
+    ")))
+      (definition (:function restore-coverage) "restore-coverage snapshot" "
+      Reinstalls a coverage snapshot as the current coverage state.
+    "
+       (defsection "Description"
+         (para "
+      Reinstalls a coverage snapshot as the current coverage state.
+    ")))
+      (definition (:function combine-coverage) "combine-coverage snapshots" "
+      Combines multiple coverage snapshots into one.
+    "
+       (defsection "Description"
+         (para "
+      Takes a list of coverage snapshots and returns a new coverage snapshot
+      representing a union of all the coverage data.
+    ")))
+      (definition (:function write-coverage-to-file) "write-coverage-to-file snapshot pathname" "
+      Save a coverage snapshot in a file.
+    "
+       (defsection "Description"
+         (para "
+      Saves the coverage snapshot in a file. The snapshot can be
+      loaded back with {code ccl:read-coverage-from-file} or loaded and
+      restored with {code ccl:restore-coverage-from-file}. Note that the file
+      created is actually a lisp source file and can be compiled for
+      faster loading.
+    ")))
+      (definition (:function read-coverage-from-file) "read-coverage-from-file pathname" "
+      Return the coverage snapshot saved in a file.
+    "
+       (defsection "Description"
+         (para "
+      Returns the snapshot saved in pathname. Doesn't affect the
+      current coverage state. pathname can be the file previously
+      created with {code ccl:write-coverage-to-file} or
+      {code ccl:save-coverage-in-file}, or it can be the name of the fasl
+      created from compiling such a file.
+    ")))
+      (definition (:function coverage-statistics) "coverage-statistics"
+       (clause "
+      Returns a sequence of {code ccl:coverage-statistics} objects, one per source file.
+    ")
+       (defsection "Description"
+         (para "
+      Returns a sequence of {code ccl:coverage-statistics} objects, one for each
+      source file, containing the same information as that written to
+      the statistics file by {function report-coverage}. The following
+      accessors are defined for {code ccl:coverage-statistics} objects:
+      "
+          (listing :definition
+            (item "{function coverage-source-file}" ccldoc::=> "
+	    the name of the source file corresponding to this information
+	  ")
+            (item "{function coverage-expressions-total}" ccldoc::=> "
+	    the total number of expressions
+	  ")
+            (item "{function coverage-expressions-entered}" ccldoc::=> "
+	    the number of source expressions that have been entered
+	    (i.e. at least partially covered)
+	  ")
+            (item "{function coverage-expressions-covered}" ccldoc::=> "
+	    the number of source expressions that were fully covered
+	  ")
+            (item "{function coverage-unreached-branches}" ccldoc::=> "
+	    the number of conditionals with one branch taken and one not taken
+	  ")
+            (item "{function coverage-code-forms-total}" ccldoc::=> "
+	    the total number of code forms. A code form is an
+	    expression in the final stage of compilation, after all
+	    macroexpansion and compiler transforms and simplification
+	  ")
+            (item "{function coverage-code-forms-covered}" ccldoc::=> "
+	    the number of code forms that have been entered
+	  ")
+            (item "{function coverage-functions-total}" ccldoc::=> "
+	    the total number of functions
+	  ")
+            (item "{function coverage-functions-fully-covered}" ccldoc::=> "
+	    the number of functions that were fully covered
+	  ")
+            (item "{function coverage-functions-partly-covered}" ccldoc::=> "
+	    the number of functions that were partly covered
+	  ")
+            (item "{function coverage-functions-not-entered}" ccldoc::=> "
+	    the number of functions never entered
+	  ")))))
+      (definition (:function reset-incremental-coverage) "reset-incremental-coverage" "
+      Reset incremental coverage.
+    "
+       (defsection "Description"
+         (para "
+      Marks a starting point for recording incremental coverage.
+      Note that calling
+      this function does not affect regular coverage data (whereas calling
+      {code ccl:reset-coverage} resets incremental coverage as well).
+    ")))
+      (definition (:function get-incremental-coverage) "get-incremental-coverage {code &key} (reset t)" "
+      Returns the delta of coverage since the last incremental reset.
+    "
+       (defsection "Description"
+         "
+      Returns the delta of coverage since the last reset of incremental coverage.
+     If {code reset} is true (the default), it also resets incremental coverage
+     now, so that the next call to {code get-incremental-coverage} will return
+     the delta from this point.
+     
+
+
+      Incremental coverage deltas are represented differently than the full coverage snapshots
+      returned by functions such as {code ccl:get-coverage}.  Incremental
+      coverage uses an abbreviated format
+      and is missing some of the information in a full snapshot, and therefore cannot be passed to
+      functions documented to accept a {param snapshot}, only to functions
+      specifically documented to accept incremental coverage deltas.
+     "))
+      (definition (:function incremental-coverage-source-matches)
+       "incremental-coverage-source-matches collection sources" "
+      Find incremental coverage deltas intersecting source regions.
+    "
+       (defsection "Arguments and Values"
+         (listing :definition
+           (item "{param collection}" ccldoc::=> "
+          A hash table mapping arbitrary keys to incremental coverage deltas, or a sequence of
+          incremental coverage deltas.
+         ")
+           (item "{param sources}" ccldoc::=> "
+          A list of pathnames and/or source-notes, the latter representing a range within a file.
+         ")))
+       (defsection "Description"
+         "
+     Given a hash table {code collection} whose values are incremental coverage
+     deltas, return a list of all keys corresponding to those deltas that intersect any region
+     in {code sources}.
+     
+
+
+     For example if the deltas represent tests, then the returned value is a list of all tests
+     that cover some part of the source regions.
+     
+
+      {code collection} can also be a sequence of deltas, in which case a subsequence
+      of matching deltas is returned.  In particular you can test whether any particular delta
+      intersects the sources by passing it in as a single-element list.
+     "))
+      (definition (:function incremental-coverage-svn-matches)
+       "incremental-coverage-svn-matches collection {code &key} (directory (current-directory)) (revision :base)" "
+      Find incremental coverage deltas matching changes from a particular subversion revision.
+    "
+       (defsection "Arguments and Values"
+         (listing :definition
+           (item "{param collection}" ccldoc::=> "
+          A hash table mapping arbitrary keys to incremental coverage deltas, or a sequence of
+          incremental coverage deltas.
+         ")
+           (item "{param directory}" ccldoc::=> "
+          The pathname of a subversion working directory.
+         ")
+           (item "{param revision}" ccldoc::=> "
+          The revision to compare to the working directory, an integer or another
+          value whose printed representation is suitable for passing as the
+          {code --revision} argument
+          to {system svn}.
+         ")))
+       (defsection "Description"
+         "
+     Given a hash table {code collection} whose values are incremental coverage
+     deltas, return a list of all keys corresponding to those deltas that intersect any changed
+     source in {code directory} since revision {code revision} in subversion.
+     
+
+
+     For example if the deltas represent tests, then the returned value is a list of all tests
+     that might be affected by the changes.
+     
+
+      {code collection} can also be a sequence of deltas, in which case a subsequence
+      of matching deltas is returned.  In particular you can test whether any particular delta
+      is affected by the changes by passing it in as a single-element list.
+     "))
+      (definition (:variable *compile-code-coverage*) "*compile-code-coverage*" "
+      When true, instrument functions being compiled to collect code coverage information.
+    "
+       (defsection "Description"
+         (para "
+      This variable controls whether functions are instrumented for
+      code coverage. Files compiled while this variable is true will
+      contain code coverage instrumentation.
+    ")))
+      (definition (:macro without-compiling-code-coverage) "without-compiling-code-coverage" "
+      Don't record code coverage for forms within the body.
+    "
+       (defsection "Description"
+         (para "
+      This macro arranges so that body doesn't record internal details
+      of code coverage. It will be considered totally covered if it's
+      entered at all. The Common Lisp macros {code ASSERT} and {code CHECK-TYPE} use
+      this macro.
+    "))))
+    (defsection "Interpreting Code Coloring"
+      (para "
+
+ The output of ccl:report-coverage consists of formatted source code, with coverage indicated by
+ coloring.  Four colors are used: dark green for forms that compiled to code in which every single
+ instruction was executed, light green for forms that have been entered but weren't totally covered, red
+ for forms that were never entered, and the page background color for toplevel forms that weren't
+ instrumented.
+
+")
+      (para "
+ The source coloring is applied from outside in.  So for example if you have
+
+  "
+       (code-block "
+(outer-form ... (inner-form ...) ...)
+  ")
+       "
+
+ first the whole outer form is painted with whatever color expresses the outer form coverage, and then the
+ inner form color is replaced with whatever color expresses the inner form coverage.  One consequence of
+ this approach is that every part of the outer form that is not specifically inside some executable inner
+ form will have the outer form's coverage color. If the syntax of outer form involves some non-executable
+ forms, or forms that do not have coverage info of their own for whatever reason, then they will just
+ inherit the color of the outer form, because they don't get repainted with a color of their own.
+")
+      (para "
+ One case in which this approach can be confusing is in the case of symbols.  As noted in the Limitations
+ section, coverage information is not recorded for variables; hence the coloring of a variable does not
+ convey information about whether the variable was evaluated or not -- that information is not available,
+ and the variable just inherits the color of the form that contains it.
+")))
+  (defsection "Other Extensions"
+    (definition (:function quit) "quit {code &optional} (exit 0) {code &key} error-handler" "
+      Cleanly exit the lisp.
+    "
+     (defsection "Summary"
+       "
+      Cleanly exit from lisp.  If the exit argument is a value of type
+      (signed-byte 32), that value will be passed to the C library
+      function _exit() as the status code.  (A value of nil is treated
+      as a zero.)
+    
+
+
+      Alternatively, exit may be a function of no arguments;  this function
+      will be called instead of _exit() to exit the lisp.
+    
+
+
+      The error-handler argument, if supplied, must be a function of one
+      argument, the condition, that will be called if an error occurs when
+      preparing to quit.  The error-handler function should exit the lisp.
+    "))
+    (definition (:function wait-for-signal) "wait-for-signal s duration" "
+      Wait for a particular signal to be received.
+    "
+     (defsection "Summary"
+       #:|
+      Wait for the signal with signal number s to be received, or until
+      duration seconds have elapsed.  If duration is nil, wait for an
+      indeterminate "very long time" (many years).
+    
+
+
+      If signal number s is outside the range of valid signals, or is
+      reserved by the lisp for its own use, an error is signaled.
+      (An error is always signaled on Windows systems.)
+    |))
+    (definition (:macro unwind-protect) "unwind-protect protected-form {lbrace}cleanup-form{rbrace}*" "
+      Ensure cleanup-forms are executed.
+    "
+     (defsection "Summary"
+       (para "
+      In {CCL}, the cleanup forms are always executed as if they were
+      wrapped with "
+        (ref (definition :macro without-interrupts)) ".
+      To allow interrupts, use
+      "
+        (ref (definition :macro with-interrupts-enabled)) ".
+    ")))
+    (definition (:variable *disassemble-verbose*) "*disassemble-verbose*" "
+      When true, display verbose disassembly output.
+    "
+     (defsection "Description"
+       "
+      When true, the output of {code disassemble} may
+      include platform-dependent additional information.  For
+      instance, on the x86 ports, the output will include the x86
+      opcode bytes.
+    
+
+
+      The default value is {code nil}.
+    "))))
