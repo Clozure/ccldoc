@@ -1,0 +1,136 @@
+(in-package :ccldoc)
+
+(defun output-html (doc filename &key external-format (if-exists :supersede))
+  (with-open-file (s filename :direction :output :if-exists if-exists
+		     :external-format external-format)
+    (format s "<!DOCTYPE html>~%")
+    (format s "<html>~%")
+    (write-html doc s)
+    (format s "</html>~%")
+    (truename s)))
+
+(defmethod write-html ((clause document) stream)
+  (write-string "<title>" stream)
+  (write-html (clause-title clause) stream)
+  (format stream "</title>~%")
+  (fresh-line stream)
+  (format stream "<body>~%")
+  (write-html (clause-body clause) stream)
+  (format stream "</body>~%"))
+
+(defmethod write-html ((clause index-section) stream)
+  (declare (ignore stream))
+  (warn "ignoring index-section"))
+
+(defmethod write-html ((clause glossary-section) stream)
+  (declare (ignore stream))
+  (warn "ignoring glossary-section"))
+
+(defmethod write-html ((clause section) stream)
+  (let ((tag (case (section-level clause)
+	       (0 :h1)
+	       (1 :h2)
+	       (2 :h3)
+	       (3 :h4)
+	       (4 :h5)
+	       (otherwise :h6))))
+    (format stream "<~a>" tag)
+    (write-html (clause-title clause) stream)
+    (format stream "</~a>~%" tag)
+    (write-html (clause-body clause) stream)))
+
+(defmethod write-html ((clause glossentry) stream)
+  (declare (ignore stream))
+  (warn "ignoring glossentry"))
+
+(defmethod write-html ((clause code-block) stream)
+  (write-string "<pre>" stream)
+  (write-html (clause-body clause) stream)
+  (format stream "~&</pre>~%"))
+
+(defmethod write-html ((clause block) stream)
+  (format stream "<blockquote>~%")
+  (write-html (clause-body clause) stream)
+  (format stream "~&</blockquote>~%"))
+
+(defmethod write-html ((clause para) stream)
+  (write-string "<p>" stream)
+  (let ((body (clause-body clause)))
+    (when body
+      (write-html (clause-body clause) stream)))
+  (write-string "</p>" stream)
+  (fresh-line stream))
+
+(defmethod write-html ((clause docerror) stream)
+  (write-string "<span color=#f00>" stream)
+  (write-string (clause-text clause) stream)
+  (write-string "</span>")
+  (fresh-line stream))
+
+(defmethod write-html ((clause link) stream)
+  (format stream "<a href=\"~a\">" (link-url clause))
+  (write-html (clause-body clause) stream)
+  (format stream "</a>~%"))
+
+(defmethod write-html ((clause table) stream)
+  (write-string "<table>" stream)
+  (loop for row across (clause-items clause)
+	do (write-html row stream))
+  (write-string "</table>" stream)
+  (fresh-line stream))
+
+(defmethod write-html ((clause row) stream)
+  (write-string "<tr>" stream)
+  (loop for item across (clause-items clause)
+	do (progn (write-string "<td>" stream)
+		  (write-html item stream)
+		  (fresh-line stream)))
+  (write-string "</tr>" stream)
+  (fresh-line stream))
+
+(defmethod write-html ((clause listing) stream)
+  (write-string "<ul>" stream)
+  (loop for item across (clause-items clause)
+	do (progn
+	     (write-string "<li>" stream)
+	     (write-html item stream)))
+  (write-string "</ul>" stream)
+  (fresh-line stream))
+
+(defmethod write-html ((clause indexed-clause) stream)
+  (write-html (clause-body clause) stream))
+
+(defmethod write-html ((clause markup) stream)
+  (let ((tag (ecase (markup-type clause)
+	       (:emphasis :emph)
+	       (:code :code)
+	       (:param :it)
+	       (:sample :it)
+	       (:system :code))))
+    (format stream "<~a>" tag)
+    (write-html (clause-body clause) stream)
+    (format stream "</~a>" tag)))
+
+(defmethod write-html ((clause item) stream)
+  (let ((body (clause-body clause)))
+    (when body
+      (write-html (clause-body clause) stream))))
+
+(defmethod write-html ((clause term-item) stream)
+  (declare (ignore stream))
+  (warn "ignoring term-item"))
+
+(defmethod write-html ((clause xref) stream)
+  (declare (ignore stream))
+  (warn "ignoring xref"))
+
+(defmethod write-html ((clause definition) stream)
+  (declare (ignore stream))
+  (warn "ignoring definition"))
+
+(defmethod write-html ((clause cons) stream)
+  (dolist (c clause)
+    (write-html c stream)))
+
+(defmethod write-html ((clause string) stream)
+  (write-string (cl-who:escape-string-minimal clause) stream))
