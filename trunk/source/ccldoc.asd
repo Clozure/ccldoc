@@ -15,7 +15,8 @@
 (defsystem "ccldoc"
     :depends-on ("alexandria"
 		 "split-sequence"
-		 "s-xml")
+		 "s-xml"
+		 "cl-who")
     :serial t
     :components ((:file "package")
 		 (:file "utils")
@@ -24,4 +25,5 @@
 		 (:file "syntax")
 		 (:file "output-docbook")
 		 (:file "output-tracwiki")
+		 (:file "output-html")
 		 (:file "output-ccldoc")))
