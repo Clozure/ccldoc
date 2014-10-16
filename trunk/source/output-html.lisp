@@ -10,9 +10,14 @@
     (truename s)))
 
 (defmethod write-html ((clause document) stream)
+  (write-string "<head>" stream)
+  (terpri stream)
+  (format stream "<link rel=\"stylesheet\" type=\"text/css\" href=\"~a\" />"
+	  "ccldoc.css")
   (write-string "<title>" stream)
   (write-html (clause-title clause) stream)
   (format stream "</title>~%")
+  (write-string "</head>")
   (fresh-line stream)
   (format stream "<body>~%")
   (write-html (clause-body clause) stream)
@@ -37,7 +42,9 @@
     (format stream "<~a>" tag)
     (write-html (clause-title clause) stream)
     (format stream "</~a>~%" tag)
-    (write-html (clause-body clause) stream)))
+    (format stream "<div>~%")
+    (write-html (clause-body clause) stream)
+    (format stream "</div>~%")))
 
 (defmethod write-html ((clause glossentry) stream)
   (declare (ignore stream))
@@ -97,7 +104,10 @@
 	(otherwise (values "" "")))
     (write-string start-tag stream)
     (loop for item across (clause-items clause)
-	  do (write-html item stream))
+	  do (progn
+	       (when (member (listing-type clause) '(:bullet :number))
+		 (write-string "<li>" stream))
+	       (write-html item stream)))
     (write-string end-tag stream)
     (fresh-line stream)))
 
@@ -118,7 +128,6 @@
 (defmethod write-html ((clause item) stream)
   (let ((body (clause-body clause)))
     (when body
-      (write-string "<li>" stream)
       (write-html (clause-body clause) stream)
       (fresh-line stream))))
 
@@ -160,14 +169,16 @@
 (defmethod write-html ((clause definition) stream)
   (write-string "<div class=definition>" stream)
   (fresh-line stream)
-  (write-string "[" stream)
-  (write-html (dspec-type-name (clause-name clause)) stream)
-  (write-string "]<br>" stream)
   (write-string (html-formatted-signature (clause-text (definition-signature
 							   clause)))
 		stream)
+  (write-string "<span class=\"definition-kind\">[" stream)
+  (write-html (dspec-type-name (clause-name clause)) stream)
+  (write-string "]</span>" stream)
   (when (definition-summary clause)
+    (write-string "<p>" stream)
     (write-html (definition-summary clause) stream)
+    (write-string "</p>" stream)
     (fresh-line stream))
   (write-html (clause-body clause) stream)
   (write-string "</div>" stream)
@@ -179,3 +190,7 @@
 
 (defmethod write-html ((clause string) stream)
   (write-string (cl-who:escape-string-minimal clause) stream))
+
+(defmethod write-html :before ((clause named-clause) stream)
+  (when (clause-name clause)
+    (format stream "<a id=\"~a\"></a>~%" (clause-external-id clause))))

@@ -1,0 +1,57 @@
+tt, code, pre {
+    font-family: "Inconsolata", "DejaVu Sans Mono", "Courier";
+    font-size: medium;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Futura", sans-serif;
+    font-weight: normal
+}
+
+body {
+    max-width: 650px;
+    background-color: white;
+    margin-left: 1em;
+    margin-right: 1em;
+    font-family: "Georgia";
+    font-size: medium;
+}
+
+h1 {
+    font-size: xx-large;
+    margin-bottom: 1.2em;
+}
+
+h2 {
+    font-size: x-large;
+    margin-bottom: 1em;
+}
+
+h3 {
+    font-size: large;
+    margin-bottom: 1em;
+}
+
+h4 {
+    font-size: medium;
+    margin-bottom: 1em;
+}
+
+h5 {
+    font-size: medium;
+    margin-bottom: 1em;
+}
+
+h6 { 
+    font-size: medium;
+    margin-bottom: 1em;
+}
+
+.definition {
+    margin-bottom: 1.5em;
+}
+
+.definition-kind {
+    float: right;
+}
+
