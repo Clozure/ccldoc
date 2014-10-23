@@ -428,144 +428,110 @@ Consider a code fragment like the following:|
           Lisp objects be dangerous, as can stack allocation if it's
           abused (if DYNAMIC-EXTENT declarations are violated.)
           Correct use of the constructs and primitives described here
-          is reliable and safe; slightly incorrect use of these
+          is reliable and safe; even slightly incorrect use of these
           constructs and primitives can crash {CCL}.")))
     (defsection "Foreign-Memory-Addresses Dictionary"
       (para "Unless otherwise noted, all of the symbols mentioned
         below are exported from the CCL package.")
       (defsection "Scalar memory reference"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%get-signed-byte ptr &optional (offset 0)
+        (definition (:function %get-unsigned-byte)
+                    "%get-unsigned-byte ptr &optional (offset 0)" ""
+          "References and returns the unsigned 8-bit byte at the effective byte
+          address formed by adding {param offset} to the address encapsulated by
+          {param ptr}.")
+        (definition (:function %get-signed-byte)
+                    "%get-signed-byte ptr &optional (offset 0)" ""
+          "Like {function %get-unsigned-byte} above, but returns
+          the signed 8-bit byte at the computed address.")
+        (definition (:function %get-unsigned-word)
+                    "%get-unsigned-word ptr &optional (offset 0)" ""
+          "References and returns the unsigned 16-bit word at the effective byte
+          address formed by adding {param offset} to the address encapsulated by
+          {param ptr}.")
+        (definition (:function %get-signed-word)
+                    "%get-signed-word ptr &optional (offset 0)" ""
+          "Like {function %get-unsigned-word} above, but returns
+          the signed 16-bit word at the computed address.")
+        (definition (:function %get-unsigned-long)
+                    "%get-unsigned-long ptr &optional (offset 0)" ""
+          "References and returns the unsigned 32-bit long word at the effective byte
+          address formed by adding {param offset} to the address encapsulated by
+          {param ptr}.")
+        (definition (:function %get-signed-long)
+                    "%get-signed-long ptr &optional (offset 0)" ""
+          "Like {function %get-unsigned-long} above, but returns
+          the signed 32-bit long word at the computed address.")
+        (definition (:function %%get-unsigned-longlong)
+                    "%%get-unsigned-longlong ptr &optional (offset 0)" ""
+          "References and returns the unsigned 64-bit long long word at the effective byte
+          address formed by adding {param offset} to the address encapsulated by
+          {param ptr}.")
+        (definition (:function %%get-signed-longlong)
+                    "%%get-signed-longlong ptr &optional (offset 0)" ""
+          "Like {function %%get-unsigned-longlong} above, but returns
+          the signed 64-bit long long word at the computed address.")
+        (definition (:function %get-ptr)
+                    "%get-ptr ptr &optional (offset 0)" "")
+        (definition (:function %get-single-float)
+                    "%get-single-float ptr &optional (offset 0)" "")
+        (definition (:function %get-double-float)
+                    "%get-double-float ptr &optional (offset 0)" "")
 
-%get-unsigned-byte ptr &optional (offset 0)
+        "All of the memory reference primitives described above can be used with
+        {code setf}.")
 
-%get-signed-word ptr &optional (offset 0)
+      (definition (:function "%get-bit") "%get-bit ptr bit-offset" nil
+        "References and returns the {param bit-offset}th bit at the address
+        encapsulated by {param ptr}. (Bit 0 at a given address is the most
+        significant bit of the byte at that address.)  Can be used with
+        SETF.")
+     
+      (definition (:function "%get-bitfield") "%get-bitfield ptr bit-offset width" nil
+        "References and returns an unsigned integer composed from the
+        {param width} bits found {param bit-offset} bits from the address encapsulated by
+        {param ptr}. The least significant bit of the result is the value of
+        {code (%get-bit ptr (1- (+ bit-offset width)))}. Can be used with {code setf}.")
 
-%get-unsigned-word ptr &optional (offset 0)
+      (definition (:function "%int-to-ptr") "%int-to-ptr int" nil
+       "Creates and returns a macptr whose address is {param int}.")
 
-%get-signed-long ptr &optional (offset 0)
+      (definition (:function "%inc-ptr") "%inc-ptr ptr &optional (delta 1)" nil
+        "Creates and returns a macptr whose address is the address of
+        {param ptr} plus {param delta}. The idiom {code (%inc-ptr ptr 0)}
+        is sometimes used to copy a macptr, that is, to create a new macptr
+        encapsulating the same address as {param ptr}.")
 
-%get-unsigned-long ptr &optional (offset 0)
+      (definition (:function "%ptr-to-int") "%ptr-to-int ptr" nil
+        "Returns the address encapsulated by {param ptr} as an integer.")
 
-%%get-signed-longlong ptr &optional (offset 0)
+      (definition (:macro "%null-ptr") "%null-ptr" nil
+        "Equivalent to {code (%int-to-ptr 0)}.")
 
-%%get-unsigned-longlong ptr &optional (offset 0)
+      (definition (:function "%null-ptr-p") "%null-ptr-p ptr" nil
+        "This function returns true if {param ptr} is a macptr that encapsulates the
+        address 0.  It returns {code nil} if {param ptr} encapsulates some other address.")
+      
+      (definition (:function "%setf-macptr") "%setf-macptr dest-ptr src-ptr" nil
+        "Causes {param dest-ptr} to encapsulate the same address that {param src-ptr}
+        does, then returns the updated {param dest-ptr}.")
 
-%get-ptr ptr &optional (offset 0)
+      (definition (:macro "%incf-ptr") "%incf-ptr ptr &optional (delta 1)" nil
+        "Destructively modifies {param ptr} by adding {param delta} to the address
+        it encapsulates. Returns {param ptr}.")
 
-%get-single-float ptr &optional (offset 0)
+      (definition (:macro "with-macptrs") "with-macptrs (var expr)* &body body" nil
+        "Executes {param body} in an environment in which each {param var} is bound
+        to a stack-allocated macptr which encapsulates the foreign address
+        yielded by the corresponding {param expr}. Returns whatever values body
+        returns.")
 
-%get-double-float ptr &optional (offset 0)")
-          (item "Description" ccldoc::=> "References and returns the signed or unsigned 8-bit byte,
-		        signed or unsigned 16-bit word, signed or unsigned 32-bit long
-		        word, signed or unsigned 64-bit long long word, 32-bit address,
-		        32-bit single-float, or 64-bit double-float at the effective byte
-		        address formed by adding offset to the address encapsulated by
-		        ptr.")
-          (item "Arguments" ccldoc::=>
-           (listing :definition
-             (item "{param ptr}" ccldoc::=> "A MACPTR")
-             (item "{param offset}" ccldoc::=> "A fixnum"))))
-        "All of the memory reference primitives described above can be
+      (definition (:macro "%stack-block") "%stack-block (var expr)* &body body" nil
+        "Executes {param body} in an environment in which each {param var} is bound
+        to a stack-allocated macptr which encapsulates the address of a
+        stack-allocated region of size {param expr} bytes. Returns whatever
+        value(s) body returns.")
 
-used with SETF.")
-      (defsection "%get-bit [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%get-bit ptr bit-offset")
-          (item "Description" ccldoc::=> "References and returns the bit-offsetth bit at the address
-		        encapsulated by ptr. (Bit 0 at a given address is the most
-		        significant bit of the byte at that address.) Can be used with
-		        SETF.")
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition
-             (item "{param ptr}" ccldoc::=> "A MACPTR")
-             (item "{param bit-offset}" ccldoc::=> "A fixnum")))))
-      (defsection "%get-bitfield [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%get-bitfield ptr bit-offset width")
-          (item "Description" ccldoc::=> "References and returns an unsigned integer composed from the
-		        width bits found bit-offset bits from the address encapsulated by
-		        ptr. (The least significant bit of the result is the value of
-		        (%get-bit ptr (1- (+ bit-offset width))). Can be used with SETF.")
-          (item "Arguments" ccldoc::=> " ")
-          (item "{param ptr}" ccldoc::=> (para "A MACPTR")
-           (listing :definition
-             (item "{param bit-offset}" ccldoc::=> "A fixnum")
-             (item "{param width}" ccldoc::=> "A positive fixnum")))))
-      (defsection "%int-to-ptr [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%int-to-ptr int")
-          (item "Description" ccldoc::=> "Creates and returns a MACPTR whose address matches int.")
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition (item "{param int}" ccldoc::=> "An (unsigned-byte 32)")))))
-      (defsection "%inc-ptr [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%inc-ptr ptr &optional (delta 1)")
-          (item "Description" ccldoc::=> "Creates and returns a MACPTR whose address is the address of
-		        ptr plus delta. The idiom (%inc-ptr ptr 0) is sometimes used to
-		        copy a MACPTR, e.g., to create a new MACPTR encapsulating the same
-		        address as ptr.")
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition
-             (item "{param ptr}" ccldoc::=> "A MACPTR")
-             (item "{param delta}" ccldoc::=> "A fixnum")))))
-      (defsection "%ptr-to-int [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%ptr-to-int ptr")
-          (item "Description" ccldoc::=> "Returns the address encapsulated by ptr, as an
-		        (unsigned-byte 32).")
-          (item "Arguments" ccldoc::=> (para " ") (listing :definition (item "{param ptr}" ccldoc::=> "A MACPTR")))))
-      (defsection "%null-ptr [Macro]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%null-ptr")
-          (item "Description" ccldoc::=> "Equivalent to (%int-to-ptr 0).")))
-      (defsection "%null-ptr-p [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%null-ptr-p ptr")
-          (item "Description" ccldoc::=> "Returns T If ptr is a MACPTR encapsulating the address 0,
-		        NIL if ptr encapsulates some other address.")
-          (item "Arguments" ccldoc::=> (para " ") (listing :definition (item "{param ptr}" ccldoc::=> "A MACPTR")))))
-      (defsection "%setf-macptr [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%setf-macptr dest-ptr src-ptr")
-          (item "Description" ccldoc::=> "Causes dest-ptr to encapsulate the same address that src-ptr
-		        does, then returns dest-ptr.")
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition
-             (item "{param dest-ptr}" ccldoc::=> "A MACPTR")
-             (item "{param src-ptr}" ccldoc::=> "A MACPTR")))))
-      (defsection "%incf-ptr [Macro]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%incf-ptr ptr &optional (delta 1)")
-          (item "Description" ccldoc::=> "Destructively modifies ptr, by adding delta to the address
-		        it encapsulates. Returns ptr.")
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition
-             (item "{param ptr}" ccldoc::=> "A MACPTR")
-             (item "{param delta}" ccldoc::=> "A fixnum")))))
-      (defsection "with-macptrs [Macro]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "with-macptrs (var expr)* &body body")
-          (item "Description" ccldoc::=> "Executes body in an environment in which each var is bound
-		        to a stack-allocated macptr which encapsulates the foreign address
-		        yielded by the corresponding expr. Returns whatever value(s) body
-		        returns.")
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition
-             (item "{param var}" ccldoc::=> "A symbol (variable name)")
-             (item "{param expr}" ccldoc::=> "A MACPTR-valued expression")))))
-      (defsection "%stack-block [Macro]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%stack-block (var expr)* &body body")
-          (item "Description" ccldoc::=> "Executes body in an environment in which each var is bound
-		        to a stack-allocated macptr which encapsulates the address of a
-		        stack-allocated region of size expr bytes. Returns whatever
-		        value(s) body returns.")
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition
-             (item "{param var}" ccldoc::=> "A symbol (variable name)")
-             (item "{param expr}" ccldoc::=> "An expression which should evaluate to a non-negative
-		              fixnum")))))
+     
       (defsection "make-cstring [Function]"
         (listing :definition
           (item "Syntax" ccldoc::=> "make-cstring string")
