@@ -168,8 +168,8 @@
   (let ((tag (ecase (markup-type clause)
 	       (:emphasis :emph)
 	       (:code :code)
-	       (:param :it)
-	       (:sample :it)
+	       (:param :i)
+	       (:sample :i)
 	       (:system :code))))
     (format stream "<~a>" tag)
     (write-html (clause-body clause) stream)
@@ -198,6 +198,7 @@
 	      stream)
   (write-string "</a>" stream))
 
+;;l This is pretty much an ad-hoc disaster.
 (defun html-formatted-signature (signature)
   (let ((words (split-sequence #\space
 			       (cl-who:escape-string (string-downcase
@@ -205,16 +206,20 @@
     (with-output-to-string (s)
       (format s "<code>~a</code> " (pop words))
       (dolist (w words)
-	(cond ((member w (list "&amp;key" "&amp;optional" "&amp;rest"
-			       "&amp;allow-other-keys")
-		       :test 'equalp)
-	       (format s "<code>~a</code> " w))
-	      ((char= (char w 0) #\()
-	       (write-string "(" s)
-	       (format s "<i>~a</i>" (string-trim "()" w))
-	       (write-string ") " s))
-	      (t
-	       (format s "<i>~a</i> " w)))))))
+        (cond ((member w (list "&amp;key" "&amp;optional" "&amp;rest" "&amp;allow-other-keys")
+                       :test 'equalp)
+               (format s "<code>~a</code> " w))
+              ((and (char= (char w 0) #\()
+                    (not (char= (char w (1- (length w))) #\))))
+               (write-string " (" s)
+               (format s "<i>~a</i> " (cl-who:escape-string (string-trim "(" w))))
+              ((and (not (char= (char w 0) #\())
+                    (char= (char w (1- (length w))) #\)))
+               (format s "<i>~a</i>" (cl-who:escape-string (string-trim ")" w)))
+               (write-string ") " s))
+              (t
+               (format s "<i>~a</i> " (cl-who:escape-string w))))
+))))
 
 (defmethod write-html ((clause definition) stream)
   (write-string "<div class=definition>" stream)
