@@ -471,11 +471,17 @@ Consider a code fragment like the following:|
           "Like {function %%get-unsigned-longlong} above, but returns
           the signed 64-bit long long word at the computed address.")
         (definition (:function %get-ptr)
-                    "%get-ptr ptr &optional (offset 0)" "")
+                    "%get-ptr ptr &optional (offset 0)" nil
+          "Returns a macptr encapsulating the address found at the effective byte address
+          formed by adding {param offset} to the address represented by {param ptr}.")
         (definition (:function %get-single-float)
-                    "%get-single-float ptr &optional (offset 0)" "")
+                    "%get-single-float ptr &optional (offset 0)" nil
+          "Returns the {code single-float} found at the effective byte address
+          formed by adding {param offset} to the address represented by {param ptr}.")
         (definition (:function %get-double-float)
-                    "%get-double-float ptr &optional (offset 0)" "")
+                    "%get-double-float ptr &optional (offset 0)" nil
+          "Returns the {code double-float} found at the effective byte address
+          formed by adding {param offset} to the address represented by {param ptr}.")
 
         "All of the memory reference primitives described above can be used with
         {code setf}.")
