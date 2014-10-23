@@ -246,6 +246,11 @@
 (defmethod write-html ((clause string) stream)
   (write-string (cl-who:escape-string-minimal clause) stream))
 
+(defmethod write-html ((clause null) stream)
+  (declare (ignore stream))
+  (warn "null clause"))
+
+
 (defmethod write-html :before ((clause named-clause) stream)
   (when (clause-name clause)
     (format stream "<a id=\"~a\"></a>~%" (clause-external-id clause))))
