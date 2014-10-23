@@ -370,7 +370,8 @@
   (cond ((stringp name) name)
         ((dspecp name) ;; including wild
          (with-standard-io-syntax
-             (let ((*package* package))
+	   (let ((*package* package)
+		 (*print-case* :downcase))
                (let ((lisp-name (dspec-name name)))
                  ;; TODO: do better if lisp-name is an expression (i.e. a SETF name or METHOD name)
                  ;; only happens for SETF names and METHOD names, very few times for now.
