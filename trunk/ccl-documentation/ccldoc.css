@@ -73,3 +73,10 @@ div.sidebar {
 div.body {
     padding: 1em;
 }
+
+pre.source-code {
+    background-color: #eee;
+    border: 1px solid #888;
+    padding: 1em;
+    white-space: pre;
+}
