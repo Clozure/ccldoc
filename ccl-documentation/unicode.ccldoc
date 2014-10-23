@@ -3,8 +3,8 @@
 (chapter "Characters and External Formats"
   (defsection "Unicode"
       (para "All characters and strings in {CCL} fully support Unicode
-    by using UTF-32. There is only one {code CHARACTER} type and one
-    {code STRING} type in {CCL}.  There has been a lot of discussion
+    by using UTF-32. There is only one {code character} type and one
+    {code string} type in {CCL}.  There has been a lot of discussion
     about this decision which can be found by searching the
     openmcl-devel archives at {link
     http://clozure.com/pipermail/openmcl-devel/}.  Suffice it to say
@@ -16,16 +16,16 @@
 		    "A value in the Unicode code space; that is, a
                    non-negative integer below {variable
                    char-code-limit} (#x110000).")
-      "There is one {code CHARACTER} type in {CCL}.
-    All {code CHARACTER}s are {code BASE-CHAR}s.  {variable
+      "There is one {code character} type in {CCL}.
+    All {code character}s are {code base-char}s.  {variable
     char-code-limit} is now {code #x110000}, which means that all
     Unicode characters can be directly represented.  As of Unicode
-    5.0, only about 100,000 of 1,114,112 possible {code CHAR-CODE}s
+    5.0, only about 100,000 of 1,114,112 possible {code char-code}s
     are actually defined. The function {function code-char} knows that
     certain ranges of code values (notably {code #xd800}-{code
     #xddff}) will never be valid character codes and will return {code
-    NIL} for arguments in that range, but may return a non-{code NIL}
-    value (an undefined/non-standard {code CHARACTER} object) for
+    nil} for arguments in that range, but may return a non-{code nil}
+    value (an undefined/non-standard {code character} object) for
     other unassigned code values.
 
     {CCL} supports character names of the form {code u+xxxx}-where
@@ -45,30 +45,30 @@
 
     (defsection "External Formats"
 	(para "{function open}, {function load}, and {function
-    compile-file} all take an {code :EXTERNAL-FORMAT} keyword
-    argument.  The value of {code :EXTERNAL-FORMAT} can be
-    {code :DEFAULT} (the default value), a line termination
+    compile-file} all take an {code :external-format} keyword
+    argument.  The value of {code :external-format} can be
+    {code :default} (the default value), a line termination
     keyword (see {section Line Termination Keywords}), a character
     encoding keyword (see {section Character Encodings}), an
     external-format object created using {function
     make-external-format} (see "
 	      (ref (definition :function make-external-format)) "), or a plist with keys:
-    {code :DOMAIN}, {code :CHARACTER-ENCODING}
-    and {code :LINE-TERMINATION}.  If
+    {code :domain}, {code :character-encoding}
+    and {code :line-termination}.  if
     {param argument} is a plist, the result of
-    {code (APPLY #'MAKE-EXTERNAL-FORMAT
+    {code (apply #'make-external-format
     {param argument})} will be used.")
-      "If {code :DEFAULT} is specified, then the value of {variable
+      "If {code :default} is specified, then the value of {variable
     *default-external-format*} is used.  If no line-termination is
     specified, then the value of {variable *default-line-termination*}
-    is used, which defaults to {code :UNIX}.  If no character encoding
+    is used, which defaults to {code :unix}.  If no character encoding
     is specified, then {variable *default-file-character-encoding*} is
     used for file streams and {variable
     *default-socket-character-encoding*} is used for socket streams.
-    The default, default character encoding is {code NIL} which is a
-    synonym for {code :ISO-8859-1}.
+    The default, default character encoding is {code nil} which is a
+    synonym for {code :iso-8859-1}.
 
-    Note that the set of keywords used to denote CHARACTER-ENCODINGs
+    Note that the set of keywords used to denote {code character-encoding}s
     and the set of keywords used to denote line-termination
     conventions is disjoint: a keyword denotes at most a character
     encoding or a line termination convention, but never both.
@@ -78,33 +78,33 @@
     external-format-line-termination} and {function
     external-format-character-encoding}."
 
-      (definition (:variable *default-external-format*) "CCL:*DEFAULT-EXTERNAL-FORMAT*" nil
+      (definition (:variable *default-external-format*) "ccl:*default-external-format*" nil
 		  (defsection "Description"
 		      "The value of this variable is used
-	        when :EXTERNAL-FORMAT is unspecified or specified
-	        as :DEFAULT. It can meaningfully be given any value
+	        when {code :external-format} is unspecified or specified
+	        as {code :default}. It can meaningfully be given any value
 	        that can be used as an external-format (except for the
-	        value :DEFAULT.)
+	        value {code :default}.)
 
 	        The initial value of this variable in {CCL} is
-	        {code :UNIX}, which is equivalent to
-	        {code (:LINE-TERMINATION :UNIX)}, among other
-	        things.  "))
+	        {code :unix}, which is equivalent to
+	        {code (:line-termination :unix)}, among other
+	        things."))
 
-      (definition (:variable *default-line-termination*) "CCL:*DEFAULT-LINE-TERMINATION*" nil
+      (definition (:variable *default-line-termination*) "ccl:*default-line-termination*" nil
 		  (defsection "Description"
 		      "The value of this variable is used when an
                 external-format doesn't specify a line-termination
-                convention (or specifies it as :DEFAULT.) It can
+                convention (or specifies it as {code :default}.) It can
                 meaningfully be given any value that can be used as a
                 line termination keyword
                 (see {section Line Termination Keywords}).
 
 	        The initial value of this variable
-	        in {CCL} is {code :UNIX}."))
+	        in {CCL} is {code :unix}."))
 
       (definition (:function make-external-format)
-	  "make-external-format {code &key} domain character-encoding line-termination => external-format"
+	  "make-external-format {code &key} domain character-encoding line-termination"
 	"Either creates a new external format object, or
 	return an existing one with the same specified slot
 	values."
@@ -114,33 +114,33 @@
 	      to indicate where the external format is to be used.
 	      Its value can be almost anything.  It defaults to {code
 	      NIL}.  There are two domains that have a pre-defined
-	      meaning in {CCL}: {code :FILE} indicates encoding for a
-	      file in the file system and {code :SOCKET} indicates i/o
+	      meaning in {CCL}: {code :file} indicates encoding for a
+	      file in the file system and {code :socket} indicates i/o
 	      to/from a socket.  The value of {param domain} affects
 	      the default values for {param character-encoding} and
 	      {param line-termination}.")
 		     (item "{param character-encoding}" ccldoc::=> "A
 	      keyword that specifies the character encoding for the
 	      external format. {section Character Encodings}.
-	      Defaults to {code :DEFAULT} which means if {param
-	      domain} is {code :FILE} use the value of the variable
+	      Defaults to {code :default} which means if {param
+	      domain} is {code :file} use the value of the variable
 	      {variable *default-file-character-encoding*} and if
-	      {param domain} is {code :SOCKET}, use the value of the
+	      {param domain} is {code :socket}, use the value of the
 	      variable {variable *default-socket-character-encoding*}.
 	      The initial value of both of these variables is {code
-	      NIL}, which means the {code :ISO-8859-1} encoding.")
+	      NIL}, which means the {code :iso-8859-1} encoding.")
 		     (item "{param line-termination}" ccldoc::=> "A
 	      keyword that indicates a line termination keyword
 	      {section Line Termination Keywords}.  Defaults to
-	      {code :DEFAULT} which means use the value of the
+	      {code :default} which means use the value of the
 	      variable {variable *default-line-termination*}.")
 		     (item "{param external-format}" ccldoc::=> "An
 		     external-format object as described above.")))
 
 	(defsection "Description"
 	    (para "Despite the function's name, it doesn't necessarily
-	create a new, unique EXTERNAL-FORMAT object: two calls to
-	MAKE-EXTERNAL-FORMAT with the same arguments made in the same
+	create a new, unique {type external-format} object: two calls to
+	{function make-external-format} with the same arguments made in the same
 	dynamic environment return the same (eq) object."))))
     
     (defsection "Line Termination Keywords"
@@ -152,28 +152,28 @@
 
       (table "Line Termination Keywords"
         (row (item "keyword") (item "character(s)"))
-	(row (item "{code :UNIX}") (item "{code #\\Linefeed}"))
-	(row (item "{code :MACOS}") (item "{code #\\Return}"))
-	(row (item "{code :CR}") (item "{code #\\Return}"))
-	(row (item "{code :CRLF}") (item "{code #\\Return #\\Linefeed}"))
-	(row (item "{code :CP/M}") (item "{code #\\Return #\\Linefeed}"))
-	(row (item "{code :MSDOS}") (item "{code #\\Return #\\Linefeed}"))
-	(row (item "{code :DOS}") (item "{code #\\Return #\\Linefeed}"))
-	(row (item "{code :WINDOWS}") (item "{code #\\Return #\\Linefeed}"))
-	(row (item "{code :INFERRED}") (item "see below"))
-	(row (item "{code :UNICODE}") (item "{code #\\Line_Separator}")))
+	(row (item "{code :unix}") (item "{code #\\Linefeed}"))
+	(row (item "{code :macos}") (item "{code #\\Return}"))
+	(row (item "{code :cr}") (item "{code #\\Return}"))
+	(row (item "{code :crlf}") (item "{code #\\Return #\\Linefeed}"))
+	(row (item "{code :cp/m}") (item "{code #\\Return #\\Linefeed}"))
+	(row (item "{code :msdos}") (item "{code #\\Return #\\Linefeed}"))
+	(row (item "{code :dos}") (item "{code #\\Return #\\Linefeed}"))
+	(row (item "{code :windows}") (item "{code #\\Return #\\Linefeed}"))
+	(row (item "{code :inferred}") (item "see below"))
+	(row (item "{code :unicode}") (item "{code #\\Line_Separator}")))
       
-      (para "{code :INFERRED} means that a stream's line-termination
+      (para "{code :inferred} means that a stream's line-termination
   convention is determined by looking at the contents of a file.  It
-  is only useful for {code FILE-STREAM}s that're open for
-  {code :INPUT} or {code :IO}.  The first buffer full of data is
+  is only useful for {code file-stream}s that're open for
+  {code :input} or {code :io}.  The first buffer full of data is
   examined, and if a {code #\\Return} character occurs before any
   {code #\\Linefeed} character, then the line termination type is set
-  to {code :WINDOWS} if that {code #\\Return} character is immediately
-  followed by a {code #\\Linefeed} character and to {code :MACOS}
+  to {code :windows} if that {code #\\Return} character is immediately
+  followed by a {code #\\Linefeed} character and to {code :macos}
   otherwise.  If a {code #\\Return} character isn't found in the
   buffer or if {code #\\Return} is preceded by {code #\\Linefeed}, the
-  file's line terminationt type is set to {code :UNIX}."))
+  file's line terminationt type is set to {code :unix}."))
     
     (defsection "Character Encodings"
 	"Internally, all characters and strings in {CCL} are in
@@ -182,36 +182,47 @@
     Standardization, widely known as ISO, defines many of these
     character encodings.  {CCL} implements some of these encodings as
     detailed below.  These encodings are part of the specification of
-    external formats {section External Formats}.  When reading
+    external formats (see {section External Formats}).  When reading
     from a stream, characters are converted from the specified
     external character encoding to UTF-32.  When writing to a stream,
     characters are converted from UTF-32 to the specified character
     encoding.
 
-    Internally, CHARACTER-ENCODINGs are objects (structures)
-    that are named by character encoding keywords (:ISO-8859-1,
-    :UTF-8, etc.).  The structures contain attributes of the encoding
+    Internally, {type character-encoding}s are objects (structures)
+    that are named by character encoding keywords ({code :iso-8859-1},
+    {code :utf-8}, etc.).  The structures contain attributes of the encoding
     and functions used to encode/decode external data, but unless
-    you're trying to define or debug an encoding there's little reason
-    to know much about the CHARACTER-ENCODING objects and it's usually
-    preferable to refer to a character encoding by its name.
-    
+    you are trying to define or debug an encoding, there is little reason
+    to know much about the {type character-encoding} objects and it is
+    usually preferable to refer to a character encoding by its name."
 
+      (para "The set of character encodings supported by {CCL} can be
+      retrieved by calling {function describe-character-encodings}.")
 
-    "
+      (definition (:function describe-character-encodings) "describe-character-encodings" nil
+        (defsection "Description"
+          (para "Writes descriptions of all defined character encodings
+	  to {variable *terminal-io*}.  These descriptions
+	  include the names of the encoding’s aliases and a doc string
+	  which briefly describes each encoding’s properties and
+	  intended use.")))
+
       (defsection "Encoding Problems"
-	  (para #:|On output to streams with character encodings that can
-      encode the full range of Unicode-and on input from any
-      stream-"unencodable characters" are represented using the
-      Unicode #\\Replacement_Character (= #\\U+fffd); the presence of
-      such a character usually indicates that something got lost in
-      translation.  Either data wasn't encoded properly or there was a
-      bug in the decoding process.|))
-      (defsection "Byte Order Marks"
+	  (para "When a character cannot be encoded or decoded according to a
+      specified external format, the character in question will be replaced with
+      an encoding-specific replacement character.  This will be
+      {code #\\Replacement_Character} if the destination external format includes
+      such a character; otherwise the replacement character will be {code #\\Sub}.")
+        (para "The presence of a replacement character
+      typically indicates that something got lost in
+      translation: either data was not encoded properly or there was a
+      bug in the decoding process."))
+
+        (defsection "Byte Order Marks"
 	  "The endianness of a character encoding is sometimes
       explicit, and sometimes not.  For example,
-      {code :UTF-16BE} indicates big-endian, but
-      {code :UTF-16} does not specify endianness.  A byte
+      {code :utf-16be} indicates big-endian, but
+      {code :utf-16} does not specify endianness.  A byte
       order mark is a special character that may appear at the
       beginning of a stream of encoded characters to specify the
       endianness of a multi-byte character encoding.  (It may also be
@@ -229,42 +240,32 @@
       treated specially and just appears as a normal character from
       the input stream.  It is probably a good idea to skip over this
       character.")
-      (defsection "DESCRIBE-CHARACTER-ENCODINGS"
-	  (para "The set of character encodings supported by {CCL} can be
-    retrieved by calling
-    {function describe-character-encodings}.")
-        (definition (:function describe-character-encodings) "describe-character-encodings"
-	  (clause "Writes descriptions of defined character
-	  encodings to {variable *terminal-io*}.")
-	  (defsection "Description"
-	      (para "Writes descriptions of all defined character encodings
-	  to {variable *terminal-io*}.  These descriptions
-	  include the names of the encoding's aliases and a doc string
-	  which briefly describes each encoding's properties and
-	  intended use."))
-	  (defsection "See Also"
-	      (clause
-	       "{section Character Encodings}, {section External Formats}, {section Supported Character Encodings}"))))
-      (defsection "Supported Character Encodings"
-	  (para "The list of supported encodings is reproduced here.  Most
+
+      
+      (defsection "Selected Character Encodings"
+	  (para "A few commonly-used encodings are described here.  For the
+     complete list, call {function describe-character-encodings}. Most
      encodings have aliases, e.g. the encoding named
-     {code :ISO-8859-1} can also be referred to by the
-     names {code :LATIN1} and {code :IBM819},
+     {code :iso-8859-1} can also be referred to by the
+     names {code :latin1} and {code :ibm819},
      among others.  Where possible, the keywordized name of an
      encoding is equivalent to the preferred MIME charset name (and
      the aliases are all registered IANA charset names.)")
         (listing :definition
-		 (item "{code :ISO-8859-1}" ccldoc::=> "An 8-bit, fixed-width character encoding in
+                 (item "{code :utf-8}" ccldoc::=> "An 8-bit, variable-length character encoding in
+       which characters with CHAR-CODEs in the range #x00-#x7f can be
+       encoded in a single octet; characters with larger code values
+       can be encoded in 2 to 4 bytes.
+
+       {CCL} uses this encoding for {variable *terminal-io*} and for all streams whose
+       EXTERNAL-FORMAT isn't explicitly specified.  The default for
+       {variable *terminal-io*} can be set via the
+       {code -K} command-line argument (see {section Command Line Options}).")
+
+		 (item "{code :iso-8859-1}" ccldoc::=> "An 8-bit, fixed-width character encoding in
        which all character codes map to their Unicode
        equivalents. Intended to support most characters used in most
        Western European languages.
-
-       {CCL} uses ISO-8859-1 encoding for
-       {variable *terminal-io*} and for all streams whose
-       EXTERNAL-FORMAT isn't explicitly specified.  The default for
-       {variable *terminal-io*} can be set via the
-       {code -K} command-line argument (see {section Command Line Options}).
-       
 
        ISO-8859-1 just covers the first 256 Unicode code
        points, where the first 128 code points are equivalent to
@@ -273,145 +274,17 @@
        but it may not be optimal for users working in a particular
        locale.
 
-       Aliases: {code :ISO_8859-1, :LATIN1, :L1,
-       :IBM819, :CP819, :CSISOLATIN1}")
-		 (item "{code :ISO-8859-2}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in most languages used in
-       Central/Eastern Europe.
-
-       Aliases: {code :ISO_8859-2, :LATIN2, :L2,
-       :CSISOLATIN2}")
-		 (item "{code :ISO-8859-3}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in most languages used in
-       Southern Europe.
-
-       Aliases: {code :ISO_8859-3, :LATIN3 :L3,
-       :CSISOLATIN3}")
-		 (item "{code :ISO-8859-4}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in most languages used in
-       Northern Europe.
-
-Aliases: {code :ISO_8859-4, :LATIN4, :L4, :CSISOLATIN4}")
-		 (item "{code :ISO-8859-5}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in the Cyrillic
-       alphabet.
-
-       Aliases: {code :ISO_8859-5, :CYRILLIC, :CSISOLATINCYRILLIC,
-       :ISO-IR-144}")
-		 (item "{code :ISO-8859-6}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in the Arabic
-       alphabet.
-
-       Aliases: {code :ISO_8859-6, :ARABIC, :CSISOLATINARABIC,
-       :ISO-IR-127}")
-		 (item "{code :ISO-8859-7}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in the Greek
-       alphabet.
-
-       Aliases: {code :ISO_8859-7, :GREEK, :GREEK8, :CSISOLATINGREEK,
-       :ISO-IR-126, :ELOT_928, :ECMA-118}")
-		 (item "{code :ISO-8859-8}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in the Hebrew
-       alphabet.
-
-       Aliases: {code :ISO_8859-8, :HEBREW, :CSISOLATINHEBREW,
-       :ISO-IR-138}")
-		 (item "{code :ISO-8859-9}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#xcf map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in the Turkish
-       alphabet.
-
-       Aliases: {code :ISO_8859-9, :LATIN5, :CSISOLATIN5,
-       :ISO-IR-148}")
-		 (item "{code :ISO-8859-10}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in Nordic
-       alphabets.
-
-       Aliases: {code :ISO_8859-10, :LATIN6, :CSISOLATIN6,
-       :ISO-IR-157}")
-		 (item "{code :ISO-8859-11}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found the Thai
-       alphabet.")
-		 (item "{code :ISO-8859-13}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in Baltic
-       alphabets.")
-		 (item "{code :ISO-8859-14}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in Celtic
-       languages.
-
-       Aliases: {code :ISO_8859-14, :ISO-IR-199, :LATIN8, :L8,
-       :ISO-CELTIC}")
-		 (item "{code :ISO-8859-15}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in Western European languages
-       (including the Euro sign and some other characters missing from
-       ISO-8859-1.
-
-Aliases: {code :ISO_8859-15, :LATIN9}")
-		 (item "{code :ISO-8859-16}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x9f map to their Unicode equivalents and
-       other codes map to other Unicode character values.  Intended to
-       provide most characters found in Southeast European
-       languages.
-
-       Aliases: {code :ISO_8859-16, :ISO-IR-199, :LATIN8, :L8,
-       :ISO-CELTIC}")
-		 (item "{code :MACINTOSH}" ccldoc::=> "An 8-bit, fixed-width character encoding in
-       which codes #x00-#x7f map to their Unicode equivalents and
-       other codes map to other Unicode character values.
-       Traditionally used on Classic MacOS to encode characters used
-       in western languages.
-
-       Aliases: {code :MACOS-ROMAN, :MACOSROMAN, :MAC-ROMAN,
-       :MACROMAN}")
-		 (item "{code :UCS-2}" ccldoc::=> "A 16-bit, fixed-length encoding in which
-       characters with CHAR-CODEs less than #x10000 can be encoded in
-       a single 16-bit word.  The endianness of the encoded data is
-       indicated by the endianness of a byte-order-mark character
-       (#u+feff) prepended to the data; in the absence of such a
-       character on input, the data is assumed to be in big-endian
-       order.")
-		 (item "{code :UCS-2BE}" ccldoc::=> "A 16-bit, fixed-length encoding in which
-       characters with CHAR-CODEs less than #x10000 can be encoded in
-       a single 16-bit big-endian word. The encoded data is implicitly
-       big-endian; byte-order-mark characters are not interpreted on
-       input or prepended to output.")
-		 (item "{code :UCS-2LE}" ccldoc::=> "A 16-bit, fixed-length encoding in which
-       characters with CHAR-CODEs less than #x10000 can be encoded in
-       a single 16-bit little-endian word. The encoded data is
-       implicitly little-endian; byte-order-mark characters are not
-       interpreted on input or prepended to output.")
-		 (item "{code :US-ASCII}" ccldoc::=> "An 7-bit, fixed-width character encoding in
+       Aliases: {code :iso_8859-1, :latin1, :l1,
+       :ibm819, :cp819, :csisolatin1}")
+		
+		 (item "{code :us-ascii}" ccldoc::=> "An 7-bit, fixed-width character encoding in
        which all character codes map to their Unicode
        equivalents. 
 
-       Aliases: {code :CSASCII, :CP637, :IBM637, :US,
-       :ISO646-US, :ASCII, :ISO-IR-6}")
-		 (item "{code :UTF-16}" ccldoc::=> "A 16-bit, variable-length encoding in which
+       Aliases: {code :csascii, :cp637, :ibm637, :us,
+       :iso646-us, :ascii, :iso-ir-6}")
+
+		 (item "{code :utf-16}" ccldoc::=> "A 16-bit, variable-length encoding in which
        characters with CHAR-CODEs less than #x10000 can be encoded in
        a single 16-bit word and characters with larger codes can be
        encoded in a pair of 16-bit words.  The endianness of the
@@ -419,72 +292,7 @@ Aliases: {code :ISO_8859-15, :LATIN9}")
        byte-order-mark character (#u+feff) prepended to the data; in
        the absence of such a character on input, the data is assumed
        to be in big-endian order. Output is written in native
-       byte-order with a leading byte-order mark.")
-		 (item "{code :UTF-16BE}" ccldoc::=> "A 16-bit, variable-length encoding in which
-       characters with CHAR-CODEs less than #x10000 can be encoded in
-       a single 16-bit big-endian word and characters with larger
-       codes can be encoded in a pair of 16-bit big-endian words.  The
-       endianness of the encoded data is implicit in the encoding;
-       byte-order-mark characters are not interpreted on input or
-       prepended to output.")
-		 (item "{code :UTF-16LE}" ccldoc::=> "A 16-bit, variable-length encoding in which
-       characters with CHAR-CODEs less than #x10000 can be encoded in
-       a single 16-bit little-endian word and characters with larger
-       codes can be encoded in a pair of 16-bit little-endian words.
-       The endianness of the encoded data is implicit in the encoding;
-       byte-order-mark characters are not interpreted on input or
-       prepended to output.")
-		 (item "{code :UTF-32}" ccldoc::=> "A 32-bit, fixed-length encoding in which all
-       Unicode characters can be encoded in a single 32-bit word.  The
-       endianness of the encoded data is indicated by the endianness
-       of a byte-order-mark character (#u+feff) prepended to the data;
-       in the absence of such a character on input, input data is
-       assumed to be in big-endian order.  Output is written in native
-       byte order with a leading byte-order mark.
-
-Alias: {code :UTF-4}")
-		 (item "{code :UTF-32BE}" ccldoc::=> "A 32-bit, fixed-length encoding in which all
-       Unicode characters encoded in a single 32-bit word. The encoded
-       data is implicitly big-endian; byte-order-mark characters are
-       not interpreted on input or prepended to
-       output.
-
-Alias: {code :UCS-4BE}")
-		 (item "{code :UTF-8}" ccldoc::=> "An 8-bit, variable-length character encoding in
-       which characters with CHAR-CODEs in the range #x00-#x7f can be
-       encoded in a single octet; characters with larger code values
-       can be encoded in 2 to 4 bytes.")
-		 (item "{code :UTF-32LE}" ccldoc::=> "A 32-bit, fixed-length encoding in which all
-       Unicode characters can encoded in a single 32-bit word. The
-       encoded data is implicitly little-endian; byte-order-mark
-       characters are not interpreted on input or prepended to
-       output.
-
-Alias: {code :UCS-4LE}")
-		 (item "{code :Windows-31j}" ccldoc::=> "An 8-bit, variable-length character encoding in
-     which character code points in the range #x00-#x7f can be encoded
-     in a single octet; characters with larger code values can be
-     encoded in 2 bytes.
-
-Aliases: {code :CP932, :CSWINDOWS31J}")
-		 (item "{code :EUC-JP}" ccldoc::=> "An 8-bit, variable-length character encoding in
-     which character code points in the range #x00-#x7f can be encoded
-     in a single octet; characters with larger code values can be
-     encoded in 2 bytes.
-
-Alias: {code :EUCJP}")
-		 (item "{code :GB2312}" ccldoc::=> "An 8-bit, variable-length character encoding in which
-     character code points in the range #x00-#x80 can be encoded in a
-     single octet; characters with larger code values can be encoded
-     in 2 bytes.
-
-Alias: {code :GB2312-80 :GB2312-1980 :EUC-CN :EUCCN}")
-		 (item "{code :CP936}" ccldoc::=> "An 8-bit, variable-length character encoding in which
-     character code points in the range #x00-#x80 can be encoded in a
-     single octet; characters with larger code values can be encoded
-     in 2 bytes.
-
-Alias: {code :GBK :MS936 :WINDOWS-936}")))
+       byte-order with a leading byte-order mark.")))
 
       (defsection "Encoding and Decoding Strings"
 
@@ -501,24 +309,21 @@ Alias: {code :GBK :MS936 :WINDOWS-936}")))
         (definition (:function decode-string-from-octets)
 	    "decode-string-from-octets vector {code &key} start end external-format string" nil
 	    (defsection "Description"
-		"
-    Decodes the octets in {param vector} (or the subsequence
-    of it delimited by {param start} and
-    {param end}) into a string according
-    to {param external-format}.
+		"Decodes the octets in {param vector} (or the
+    subsequence of it delimited by {param start} and {param end}) into
+    a string according to {param external-format}.
 
-    If {param string} is supplied, output will be written into it.
-    It must be large enough to hold the decoded characters.  If {param 
-    string} is not supplied, a new string will be allocated to
-    hold the decoded characters.
+    If {param string} is supplied, output will be written into it.  It
+    must be large enough to hold the decoded characters.  If {param
+    string} is not supplied, a new string will be allocated to hold
+    the decoded characters.
 
-    Returns, as multiple values, the decoded string and the position in
-    {param vector} where the decoding ended.
+    Returns, as multiple values, the decoded string and the position
+    in {param vector} where the decoding ended.
 
-    Sequences of octets in {param vector} that cannot be
-    decoded into characters according to
-    {param external-format} will be decoded as
-    #\\Replacement_Character."))
+    Sequences of octets in {param vector} that cannot be decoded into
+    characters according to {param external-format} will be decoded as
+    {code #\\Replacement_Character}."))
 
         (definition (:function encode-string-to-octets)
 	    "encode-string-to-octets string {code &key} start end external-format use-byte-order-mark vector vector-offset"
@@ -527,24 +332,24 @@ Alias: {code :GBK :MS936 :WINDOWS-936}")))
            {param start} and {param end}) into {param external-format}
            and returns, as multiple values, a vector of octets
            containing the encoded data and an integer that specifies
-           the offset into the vector where the encoded data ends."
+           the offset into the vector where the encoded data ends.
   
-	  "When {param use-byte-order-mark} is true, a byte-order mark will
-           be included in the encoded data."
+	   When {param use-byte-order-mark} is true, a byte-order mark
+           will be included in the encoded data.
 
-	  "If {param vector} is supplied, output will be written to
-           it.  It must be of type (simple-array (unsigned-byte 8))
-           and be large enough to hold the encoded data.  If it is not
-           supplied, the function will allocate a new vector."
+	  If {param vector} is supplied, output will be written to it.
+          It must be of type {code (simple-array (unsigned-byte 8))}
+          and be large enough to hold the encoded data.  If it is not
+          supplied, the function will allocate a new vector.
 
-	  "If {param vector-offset} is supplied, data will be written
-           into the output vector starting at that offset."
+	  If {param vector-offset} is supplied, data will be written
+          into the output vector starting at that offset.
 
-	  "Characters in {param string} that cannot be encoded into
-           {param external-format} will be replaced with an
-           encoding-dependent replacement character
-           (#\\Replacement_Character or #\\Sub) before being encoded
-           and written into the output vector. ")
+	  Characters in {param string} that cannot be encoded into
+          {param external-format} will be replaced with an
+          encoding-dependent replacement character
+          ({code #\\Replacement_Character} or {code #\\Sub)} before
+          being encoded and written into the output vector.")
 
         (definition (:function string-size-in-octets)
 	    "string-size-in-octets string {code &key} start end external-format use-byte-order-mark" nil

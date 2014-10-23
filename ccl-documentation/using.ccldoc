@@ -482,9 +482,7 @@ Note that legacy HFS alias files are treated as plain files.")))
     (para "
       Multiple fasl files can be concatenated into a single file.
     ")
-    (definition (:function fasl-concatenate) "fasl-concatenate out-file fasl-files {code &key} (:if-exists :error)" "
-	Concatenate several fasl files, producing a single output file.
-      "
+    (definition (:function fasl-concatenate) "fasl-concatenate out-file fasl-files &key (:if-exists :error)" "Concatenate several fasl files, producing a single output file."
      (defsection "Arguments and Values"
        (listing :definition
          (item "{param out-file}" ccldoc::=> "
