@@ -1,7 +1,8 @@
+;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "About {CCL}"
   (defsection "Introduction to {CCL}"
-    #:|{CCL} is a fast, mature, open source Common Lisp
+    "{CCL} is a fast, mature, open source Common Lisp
       implementation that runs on Linux, Mac OS X, FreeBSD, and Windows.
       {CCL} was forked from Macintosh Common Lisp (MCL) in 1998
       and the development has been entirely separate since.
@@ -16,14 +17,14 @@
       flagship product of Clozure Associates.
 
       Furthermore, the new name refers to {CCL}'s ancestry: in its
-      early years, MCL was known as Coral Common Lisp, or "CCL". For
+      early years, MCL was known as Coral Common Lisp, or “CCL”. For
       years the package that contains most of {CCL}'s
-      implementation-specific symbols has been named "CCL", an acronym
+      implementation-specific symbols has been named “CCL”, an acronym
       that once stood for the name of the Lisp product. It seems
-      fitting that "CCL" once again stands for the name of the
+      fitting that “CCL” once again stands for the name of the
       product.
 
-      Some commands and source files may still refer to "OpenMCL"
+      Some commands and source files may still refer to “OpenMCL”
       instead of {CCL}.
 
       {CCL} compiles to native code and supports multithreading
@@ -41,7 +42,7 @@
       process, or as an inferior Emacs process using either SLIME or
       ILISP.
 
-Features of {CCL} include|
+Features of {CCL} include"
     (listing :bullet
       (item "Very fast compilation speed.")
       (item "A fast, precise, compacting, generational

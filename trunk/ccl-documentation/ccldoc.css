@@ -4,16 +4,15 @@ tt, code, pre {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: "Futura", sans-serif;
+    font-family: "Eras Demi ITC", sans-serif;
     font-weight: normal
 }
 
 body {
-    max-width: 650px;
     background-color: white;
-    margin-left: 1em;
+    margin-left: 2em;
     margin-right: 1em;
-    font-family: "Georgia";
+    font-family: "Georgia", serif;
     font-size: medium;
 }
 
@@ -55,3 +54,22 @@ h6 {
     float: right;
 }
 
+table {
+    font-size: small;
+}
+
+div.sidebar {
+    float: left;
+    margin-right: 0;
+    width: 230px;
+    top: auto;
+    font-size: small;
+    border-radius: 5px;
+    background-color: #eee;
+    padding: 10px;
+    margin: 0;
+}
+
+div.body {
+    padding: 1em;
+}

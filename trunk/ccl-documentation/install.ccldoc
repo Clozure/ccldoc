@@ -1,3 +1,4 @@
+;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "Obtaining, Installing, and Running {CCL}"
   (defsection "Releases and System Requirements"

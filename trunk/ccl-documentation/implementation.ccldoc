@@ -1,3 +1,4 @@
+;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "Implementation Details of {CCL}"
   (para #:|This chapter describes many aspects of OpenMCL's
