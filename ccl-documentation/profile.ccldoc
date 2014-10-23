@@ -1,3 +1,4 @@
+;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "Profiling"
   (defsection "Using the Linux oprofile system-level profiler"

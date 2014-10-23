@@ -1,3 +1,5 @@
+;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
+
 (ccldoc:def-expander CCL () "Clozure CL")
 
 
@@ -6,8 +8,10 @@
   (include-file "install.ccldoc" :in-package :ccl)
   (include-file "build.ccldoc" :in-package :ccl)
   (include-file "using.ccldoc" :in-package :ccl)
+  (include-file "unicode.ccldoc" :in-package :ccl)
+  (include-file "debugging.ccldoc" :in-package :ccl)
   (include-file "ide.ccldoc" :in-package :ccl)
-  ;(include-file "hemlock.ccldoc" :in-package :hemlock)
+  (include-file "hemlock.ccldoc" :in-package :ccl)
   (include-file "threads.ccldoc" :in-package :ccl)
   (include-file "sockets.ccldoc" :in-package :ccl)
   (include-file "external-process.ccldoc" :in-package :ccl)

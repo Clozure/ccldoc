@@ -1,3 +1,4 @@
+;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "The Objective-C Bridge"
   "Mac OS X APIs use a language called Objective-C, which is

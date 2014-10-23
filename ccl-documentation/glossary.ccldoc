@@ -1,3 +1,4 @@
+;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (glossary-section "Glossary of Terms"
   (glossentry "application bundle"

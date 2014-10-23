@@ -1,3 +1,4 @@
+;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "Building {CCL} from its Source Code"
   "{CCL}, like many other Lisp implementations, consists of a
@@ -26,17 +27,14 @@
   (defsection "Building Definitions"
     (para "The following terms are used in subsequent sections; it
       may be helpful to refer to these definitions.")
-    (para (ref (glossentry "fasl file") "fasl files") #:| are the object files produced
+    (para (ref (glossentry "fasl file") "fasl files") " are the object files produced
       by {code compile-file}.  fasl files store the
       machine code associated with function definitions and the
       external representation of other lisp objects in a compact,
       machine-readable form. fasl is short for
-      "{code FAS}t
-      {code L}oading". {CCL} uses different pathname
-      types (extensions) to name fasl files on different platforms;
-      see
-      |
-     (ref (table "Platform-specific filename conventions")))
+      “{code FAS}t {code L}oading”. {CCL} uses different pathname
+      types (extensions) to name fasl files on different platforms; see "
+      (ref (table "Platform-specific filename conventions")) " for the details.")
     (para "The " (ref (glossentry "kernel") "Lisp kernel") " is a C program with a fair amount of
       platform-specific assembly language code. Its basic job is to
       map a lisp heap image into memory, transfer control to some
