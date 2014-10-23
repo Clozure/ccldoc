@@ -101,7 +101,7 @@
       (format stream "</div>~%"))))
 
 (defmethod write-html ((clause code-block) stream)
-  (write-string "<pre>" stream)
+  (write-string "<pre class=\"source-code\">" stream)
   (write-html (clause-body clause) stream)
   (format stream "~&</pre>~%"))
 
