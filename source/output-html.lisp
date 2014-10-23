@@ -32,7 +32,6 @@
 (defmethod write-html ((clause document) stream)
   (write-string "<head>" stream)
   (terpri stream)
-  #+nil
   (format stream "<link rel=\"stylesheet\" type=\"text/css\" href=\"~a\" />"
 	  "ccldoc.css")
   (write-string "<title>" stream)
@@ -59,7 +58,7 @@
   (write-string "</h1>" stream)
   (when (clause-body clause)
     (write-html (clause-body clause) stream))
-  (write-string "</div>"))
+  (write-string "</div>" stream))
 
 (defmethod write-html ((clause glossary-section) stream)
   (write-string "<div class=glossary>" stream)
@@ -92,7 +91,7 @@
 		 (otherwise :h6))))
       (format stream "<~a>" tag)
       (when (<= (section-level clause) 1)
-	(format stream "~d " (incf *chapter-number*)))
+	(format stream "~d. " (incf *chapter-number*)))
       (write-html (clause-title clause) stream)
       (format stream "</~a>~%" tag)
       (format stream "<div class=\"section\">~%")
