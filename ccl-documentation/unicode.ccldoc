@@ -215,7 +215,7 @@
       such a character; otherwise the replacement character will be {code #\\Sub}.")
         (para "The presence of a replacement character
       typically indicates that something got lost in
-      translation: either data was not encoded properly or there was a
+      translation: either data was not encoded properly or there was a
       bug in the decoding process."))
 
         (defsection "Byte Order Marks"

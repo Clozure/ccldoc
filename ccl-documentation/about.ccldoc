@@ -24,7 +24,7 @@
       fitting that “CCL” once again stands for the name of the
       product.
 
-      Some commands and source files may still refer to “OpenMCL”
+      Some commands and source files may still refer to “OpenMCL”
       instead of {CCL}.
 
       {CCL} compiles to native code and supports multithreading
