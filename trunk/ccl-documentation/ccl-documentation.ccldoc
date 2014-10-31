@@ -2,6 +2,23 @@
 
 (ccldoc:def-expander CCL () "Clozure CL")
 
+(defun generate-ccl-symbols ()
+  (let ((forms nil)
+	(rows nil))
+    (do-external-symbols (sym :ccl)
+      (cond ((fboundp sym)
+	     (push `(:function ,sym) forms))
+	    ((boundp sym)
+	     (push `(:variable ,sym) forms))))
+    (loop
+      (let ((a (first forms))
+	    (b (second forms))
+	    (c (third forms)))
+	(setq forms (nthcdr 3 forms))
+	(when (null forms)
+	  (return))
+	(push `(:row (:item ,a) (:item ,b) (:item ,c)) rows)))
+    `(:table "Exported Symbols" ,@rows)))
 
 (document "{CCL} Documentation"
   (include-file "about.ccldoc" :in-package :ccl)
@@ -28,4 +45,6 @@
   (include-file "modifying.ccldoc" :in-package :ccl)
   (include-file "q-and-a.ccldoc" :in-package :ccl)
   (include-file "glossary.ccldoc" :in-package :ccl)
-  (index-section "Symbol Index"))
+  (index-section "Symbol Index")
+  (defsection "CCL Exported Symbols"
+    #.(generate-ccl-symbols)))
