@@ -114,8 +114,6 @@ For example,"
 "))
           (item))))
 
-«hello world»
-
     (defsection "Syntax of Foreign Type Specifiers"
       (listing :bullet
         (item "Some foreign types are builtin: keywords denote

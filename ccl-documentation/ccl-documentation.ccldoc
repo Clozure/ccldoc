@@ -10,6 +10,8 @@
 	     (push `(:function ,sym) forms))
 	    ((boundp sym)
 	     (push `(:variable ,sym) forms))))
+    (setq forms (sort forms 'string-greaterp :key 'second))
+    (setq forms (stable-sort forms 'string-greaterp :key 'first))
     (loop
       (let ((a (first forms))
 	    (b (second forms))
