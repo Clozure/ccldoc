@@ -323,7 +323,7 @@ r24 (save7) = ()
 	      Initialized to NIL on LinuxPPC; initialized to T on platforms
 	      (such as MacOS X/Darwin) that require that the VRSAVE SPR contain
 	      a bitmask of active vector registers at all times.")))
-    (definition (:lap-macro ccl::with-altivec-registers) "with-altivec-registers reglist {code &body} body" nil
+    (definition (:lap-macro ccl::with-altivec-registers) "with-altivec-registers reglist {code &body} body" "Specify the test of Altivec registers used in the body."
      (defsection "Arguments and Values"
        (listing :definition
          (item "{param reglist}" ccldoc::=> "A list of vector register names (vr0 .. vr31).")
@@ -338,7 +338,7 @@ r24 (save7) = ()
 	      non-volatile vector registers (and, if
 	      *altivec-lapmacros-maintain-vrsave-p* is true, restores VRSAVE as
 	      well. Uses the IMM0 register (r3) as a temporary.")))
-    (definition (:lap-macro ccl::with-vector-buffer) "with-vector-buffer base n {code &body} body" nil
+    (definition (:lap-macro ccl::with-vector-buffer) "with-vector-buffer base n {code &body} body" "Make space for saved Altivec registers."
      (defsection "Arguments and Values"
        (listing :definition
          (item "{param base}" ccldoc::=> "Any available general-purpose register.")

@@ -1,8 +1,8 @@
 ;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "Building {CCL} from its Source Code"
-  "{CCL}, like many other Lisp implementations, consists of a
-    kernel and a heap image.  The kernel is an ordinary C program, and
+  "{CCL} consists of two parts: the {term lisp kernel} and a {term heap image}.
+   The kernel is an ordinary C program, and
     is built with a C compiler.  It provides very basic and
     fundamental facilities, such as memory management, garbage
     collection, and bootstrapping.  All the higher-level features are
@@ -24,18 +24,19 @@
     implementation of Common Lisp as the host compiler, rather than an
     older {CCL}; this would be a challenging and experimental way to
     build, and is not described here."
+
   (defsection "Building Definitions"
     (para "The following terms are used in subsequent sections; it
       may be helpful to refer to these definitions.")
-    (para (ref (glossentry "fasl file") "fasl files") " are the object files produced
-      by {code compile-file}.  fasl files store the
+    (para "A {term fasl file} is the file produced
+      by {code compile-file}.  These files store the
       machine code associated with function definitions and the
       external representation of other lisp objects in a compact,
-      machine-readable form. fasl is short for
+      machine-readable form. Short for
       “{code FAS}t {code L}oading”. {CCL} uses different pathname
       types (extensions) to name fasl files on different platforms; see "
       (ref (table "Platform-specific filename conventions")) " for the details.")
-    (para "The " (ref (glossentry "kernel") "Lisp kernel") " is a C program with a fair amount of
+    (para "The {term lisp kernel} is a C program with a fair amount of
       platform-specific assembly language code. Its basic job is to
       map a lisp heap image into memory, transfer control to some
       compiled lisp code that the image contains, handle any
@@ -45,28 +46,21 @@
       files on different platforms; see
       "
      (ref (table "Platform-specific filename conventions")) ".")
-    (para "A " (ref (glossentry "image") "heap image") " is a file that can be quickly mapped into a
+    (para "A {term heap image} is a file that can be quickly mapped into a
       process's address space. Conceptually, it's not too different
       from an executable file or shared library in the OS's native
       format (ELF or Mach-O/dyld format); for historical reasons,
       {CCL}'s own heap images are in their own (fairly simple)
-      format. The term {code full heap image} refers to a
-      heap image file that contains all of the code and data that
-      comprise {CCL}. {CCL} uses different filenames to name the
-      standard full heap image files on different platforms; see
-      "
+      format. A full heap image contains all of the code and data that
+      comprise {CCL}. The default image file name
+      is the name of the lisp kernel with a {code .image} suffix.  See "
      (ref (table "Platform-specific filename conventions")) ".")
-    (para "A bootstrapping image ({section Generating a bootstrapping image})
+    (para "A bootstrapping image (see {section Generating a bootstrapping image})
       is a minimal
       heap image used in the process of building {CCL} itself.  The
       bootstrapping image contains just enough code to load the rest
-      of {CCL} from fasl files.  It may help to think of the
-      bootstrapping image as the egg and the full heap image as the
-      chicken. {CCL} uses different filenames to name the standard
-      bootstrapping image files on different platforms; see
-      "
-     (ref (table "Platform-specific filename conventions")) "
-      .")
+      of {CCL} from fasl files.  The function {function rebuild-ccl}
+      automatically creates a bootstrepping image as part of its work.")
     (para "Each supported platform (and possibly a few
       as-yet-unsupported ones) has a uniquely named subdirectory of
       {code ccl/lisp-kernel/}; each such
@@ -77,113 +71,79 @@
       build directory is described in
       "
      (ref (table "Platform-specific filename conventions")) ".")
-    (defsection "Platform-specific filename conventions"
-      (table "Platform-specific filename conventions"
-             (row
-               (item "Platform")
-               (item "kernel")
-               (item "full-image")
-               (item "boot-image")
-               (item "fasl extension")
-               (item "kernel-build directory"))
-        (row
-          (item "DarwinPPC32")
-          (item "dppccl")
-          (item "dppccl.image")
-          (item "ppc-boot.image")
-          (item ".dfsl")
-          (item "darwinppc"))
-        (row
-          (item "LinuxPPC32")
-          (item "ppccl")
-          (item "ppccl.image")
-          (item "ppc-boot")
-          (item ".pfsl")
-          (item "linuxppc"))
-        (row
-          (item "DarwinPPC64")
-          (item "dppccl64")
-          (item "dppccl64.image")
-          (item "ppc-boot64.image")
-          (item ".d64fsl")
-          (item "darwinppc64"))
-        (row
-          (item "LinuxPPC64")
-          (item "ppccl64")
-          (item "ppccl64.image")
-          (item "ppc-boot64")
-          (item ".p64fsl")
-          (item "linuxppc64"))
-        (row
-          (item "LinuxX8664")
-          (item "lx86cl64")
-          (item "lx86cl64.image")
-          (item "x86-boot64")
-          (item ".lx64fsl")
-          (item "linuxx8664"))
-        (row
-          (item "LinuxX8632")
-          (item "lx86cl")
-          (item "lx86cl.image")
-          (item "x86-boot32")
-          (item ".lx32fsl")
-          (item "linuxx8632"))
-        (row
-          (item "DarwinX8664")
-          (item "dx86cl64")
-          (item "dx86cl64.image")
-          (item "x86-boot64.image")
-          (item ".dx64fsl")
-          (item "darwinx8664"))
-        (row
-          (item "DarwinX8632")
-          (item "dx86cl")
-          (item "dx86cl.image")
-          (item "x86-boot32.image")
-          (item ".dx32fsl")
-          (item "darwinx8632"))
-        (row
-          (item "FreeBSDX8664")
-          (item "fx86cl64")
-          (item "fx86cl64.image")
-          (item "fx86-boot64")
-          (item ".fx64fsl")
-          (item "freebsdx8664"))
-        (row
-          (item "FreeBSDX8632")
-          (item "fx86cl")
-          (item "fx86cl.image")
-          (item "fx86-boot32")
-          (item ".fx32fsl")
-          (item "freebsdx8632"))
-        (row
-          (item "SolarisX64")
-          (item "sx86cl64")
-          (item "sx86cl64.image")
-          (item "sx86-boot64")
-          (item ".sx64fsl")
-          (item "solarisx64"))
-        (row
-          (item "SolarisX86")
-          (item "sx86cl")
-          (item "sx86cl.image")
-          (item "sx86-boot32")
-          (item ".sx32fsl")
-          (item "solarisx86"))
-        (row
-          (item "Win64")
-          (item "wx86cl64.exe")
-          (item "sx86cl64.image")
-          (item "wx86-boot64.image")
-          (item ".wx64fsl")
-          (item "win64"))
-        (row
-          (item "Win32")
-          (item "wx86cl.exe")
-          (item "wx86cl.image")
-          (item "wx86-boot32.image")
-          (item ".wx32fsl")
-          (item "win32")))))
+
+    (table "Platform-specific filename conventions"
+      (row
+       (item "Platform")
+       (item "kernel")
+       (item "fasl extension")
+       (item "kernel build directory"))
+      (row
+       (item "Linux (ppc)")
+       (item "ppccl")
+       (item ".pfsl")
+       (item "linuxppc"))
+      (row
+       (item "Linux (ppc64)")
+       (item "ppccl64")
+       (item ".p64fsl")
+       (item "linuxppc64"))
+      (row
+       (item "Linux (x8664)")
+       (item "lx86cl64")
+       (item ".lx64fsl")
+       (item "linuxx8664"))
+      (row
+       (item "Linux (x8632)")
+       (item "lx86cl")
+       (item ".lx32fsl")
+       (item "linuxx8632"))
+      (row
+       (item "Linux (arm32)")
+       (item "armcl")
+       (item ".lafsl")
+       (item "linuxarm"))
+      (row
+       (item "OS X (x8664)")
+       (item "dx86cl64")
+       (item ".dx64fsl")
+       (item "darwinx8664"))
+      (row
+       (item "OS X (x8632)")
+       (item "dx86cl")
+       (item ".dx32fsl")
+       (item "darwinx8632"))
+      (row
+       (item "FreeBSD (x8664)")
+       (item "fx86cl64")
+       (item ".fx64fsl")
+       (item "freebsdx8664"))
+      (row
+       (item "FreeBSD (x8632)")
+       (item "fx86cl")
+       (item ".fx32fsl")
+       (item "freebsdx8632"))
+      (row
+       (item "Solaris (x8664)")
+       (item "sx86cl64")
+       (item ".sx64fsl")
+       (item "solarisx64"))
+      (row
+       (item "Solaris (x8632)")
+       (item "sx86cl")
+       (item ".sx32fsl")
+       (item "solarisx86"))
+      (row
+       (item "Windows (x8664)")
+       (item "wx86cl64.exe")
+       (item ".wx64fsl")
+       (item "win64"))
+      (row
+       (item "Windows (x8632)")
+       (item "wx86cl.exe")
+       (item ".wx32fsl")
+       (item "win32"))))
+
   (defsection "Setting Up to Build"
     (para "At a given time, there are generally two versions of {CCL} that
     you might want to use (and therefore might want to build from
@@ -232,6 +192,7 @@
       On Debian Linux (and on related Linux distros such as Ubuntu) run
       {code apt-get install subversion} or equivalent in the command-line or interactive package manager.
     ")
+
   (defsection "Kernel Build Prerequisites"
     (para "The {CCL} kernel can be built with the following widely
           available tools:")
@@ -258,15 +219,14 @@
       (para "In order to build the lisp kernel on Mac OS X
         10.6 Snow Leopard, you must install the optional 10.4
         support when installing Xcode.")))
+
   (defsection "Building Everything"
     (para "You now have everything you need.  Start up
       {CCL} with the {code -n} or {code --no-init}
       option to avoid potential interference from code in your init file,
       and evaluate the following form to bring your Lisp system
       up to date.")
-    (code-block "
-? (ccl:rebuild-ccl :full t)
-    ")
+    (code-block "? (ccl:rebuild-ccl :full t)")
     (para "That call to the function {code rebuild-ccl}
       performs the following steps:")
     (listing :bullet
@@ -301,6 +261,7 @@
       cut for running all the individual steps involved in rebuilding
       the system.  You can also execute these steps individually, as
       described below.")
+
   (defsection "Building the Kernel"
     (para #:|The Lisp kernel is the executable that you run to use
       Lisp.  It doesn't actually contain the entire Lisp
@@ -322,20 +283,17 @@
       its kernel in some way.  As mentioned above, this step happens
       automatically when you do
       "
-     (code-block "
-? (rebuild-ccl :full t)
-      "))
+     (code-block "? (rebuild-ccl :full t)"))
     (defsection "Using \"make\" to build the lisp kernel"
       (para "With those tools in place, do:
         "
-       (code-block "
-shell> cd ccl/lisp-kernel/{sample PLATFORM}
-shell> make
-	    "))
+       (code-block "shell> cd ccl/lisp-kernel/{sample PLATFORM}
+shell> make"))
       (para "That'll assemble several assembly language source files,
         compile several C source files, and link
         ../../{sample the kernel}.
 	  ")))
+
   (defsection "Building the Heap Image"
     "The initial heap image is loaded by the Lisp kernel, and
       provides most of the language implementation The heap image
@@ -362,6 +320,7 @@ shell> make
       image capturing the entire memory state of a running Lisp can be
       created by calling the function
       {code ccl:save-application}.)"
+
     (defsection "Development cycle"
       (para "Creating a new {CCL} full heap image consists of the
         following steps:")
@@ -398,6 +357,7 @@ A few points worth noting:"
         sources (or updating those sources via {code svn update}),
         recompiling modified files, and using the bootstrapping image
         to produce a new heap image."))
+
     (defsection "Generating a bootstrapping image"
       #:|The bootstrapping image isn't provided in {CCL}
         distributions. It can be built from the source code provided
@@ -416,16 +376,12 @@ A few points worth noting:"
         Given a source distribution, a lisp kernel, and a heap
         image, one can produce a bootstrapping image by first invoking
         {CCL} from the shell:|
-      (code-block "
-shell> ccl
+      (code-block "shell> ccl
 Welcome to {CCL} .... !
-?
-	  ")
+? ")
       (para "then calling {code ccl:xload-level-0} at the
 	    lisp prompt:")
-      (code-block "
-? (ccl:xload-level-0)
-	  ")
+      (code-block "? (ccl:xload-level-0)")
       "This function compiles the lisp sources in the {code ccl/level-0}
         directory if they're newer than the corresponding fasl files
         and then loads the resulting fasl files into a simulated lisp
@@ -437,15 +393,12 @@ Welcome to {CCL} .... !
         whenever your existing boot image is out-of-date with respect
         to the source files in {code ccl:level-0;}
         - For example:"
-      (code-block "
-? (ccl:xload-level-0 :force)
-      ")
+      (code-block "? (ccl:xload-level-0 :force)")
       (para "forces recompilation of the level-0 sources."))
+
     (defsection "Generating fasl files"
       (para " Calling:")
-      (code-block "
-? (ccl:compile-ccl)
-	  ")
+      (code-block "? (ccl:compile-ccl)")
       "at the lisp prompt compiles any fasl files that are
 	    out-of-date with respect to the corresponding lisp sources;
 	    {code (ccl:compile-ccl t)} forces
@@ -495,11 +448,11 @@ $ ./{sample KERNEL} --image-name {sample BOOT_IMAGE} --no-init
         the full heap image for your platform. See
         "
        (ref (table "Platform-specific filename conventions")) ".")
-      (para #:|If things go wrong in the early stages of the loading
+      (para "If things go wrong in the early stages of the loading
         sequence, errors are often difficult to debug; until a fair
         amount of code (CLOS, the CL condition system, streams, the
         reader, the read-eval-print loop) is loaded, it's generally
         not possible for the lisp to report an error.  Errors that
-        occur during these early stages ("the cold load") sometimes
-        cause the lisp kernel debugger (see ) to be invoked; it's
-        primitive, but can sometimes help one to get oriented.|))))
+        occur during these early stages (“the cold load”) sometimes
+        cause the lisp kernel debugger to be invoked; it's
+        primitive, but can sometimes help one to get oriented."))))

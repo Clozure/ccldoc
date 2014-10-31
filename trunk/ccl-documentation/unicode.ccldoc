@@ -1,9 +1,8 @@
 ;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "Characters and External Formats"
-  (defsection "Unicode"
-      (para "All characters and strings in {CCL} fully support Unicode
-    by using UTF-32. There is only one {code character} type and one
+  (para "All characters and strings in {CCL} fully support Unicode by
+    using UTF-32. There is only one {code character} type and one
     {code string} type in {CCL}.  There has been a lot of discussion
     about this decision which can be found by searching the
     openmcl-devel archives at {link
@@ -44,20 +43,18 @@
     ccl:level-1;l1-reader.lisp}.")
 
     (defsection "External Formats"
-	(para "{function open}, {function load}, and {function
-    compile-file} all take an {code :external-format} keyword
+	(para "The standard functions {code open}, {code load}, and
+    {code compile-file} all accept an {code :external-format} keyword
     argument.  The value of {code :external-format} can be
     {code :default} (the default value), a line termination
     keyword (see {section Line Termination Keywords}), a character
     encoding keyword (see {section Character Encodings}), an
     external-format object created using {function
-    make-external-format} (see "
-	      (ref (definition :function make-external-format)) "), or a plist with keys:
-    {code :domain}, {code :character-encoding}
-    and {code :line-termination}.  if
-    {param argument} is a plist, the result of
-    {code (apply #'make-external-format
-    {param argument})} will be used.")
+    make-external-format}, or a plist with the keys {code :domain},
+    {code :character-encoding} and {code :line-termination}.  If
+    {param argument} is a plist, the result of {code (apply
+    #'make-external-format {param argument})} will be used.")
+
       "If {code :default} is specified, then the value of {variable
     *default-external-format*} is used.  If no line-termination is
     specified, then the value of {variable *default-line-termination*}
@@ -74,8 +71,8 @@
     encoding or a line termination convention, but never both.
 
     EXTERNAL-FORMATs are objects (structures) with two read-only
-    fields that can be accessed via the functions: {function
-    external-format-line-termination} and {function
+    fields that can be accessed via the functions: {code
+    external-format-line-termination} and {code
     external-format-character-encoding}."
 
       (definition (:variable *default-external-format*) "ccl:*default-external-format*" nil
@@ -139,7 +136,7 @@
 
 	(defsection "Description"
 	    (para "Despite the function's name, it doesn't necessarily
-	create a new, unique {type external-format} object: two calls to
+	create a new, unique {code external-format} object: two calls to
 	{function make-external-format} with the same arguments made in the same
 	dynamic environment return the same (eq) object."))))
     
@@ -188,12 +185,12 @@
     characters are converted from UTF-32 to the specified character
     encoding.
 
-    Internally, {type character-encoding}s are objects (structures)
+    Internally, {code character-encoding}s are objects (structures)
     that are named by character encoding keywords ({code :iso-8859-1},
     {code :utf-8}, etc.).  The structures contain attributes of the encoding
     and functions used to encode/decode external data, but unless
     you are trying to define or debug an encoding, there is little reason
-    to know much about the {type character-encoding} objects and it is
+    to know much about the {code character-encoding} objects and it is
     usually preferable to refer to a character encoding by its name."
 
       (para "The set of character encodings supported by {CCL} can be
@@ -324,13 +321,13 @@
     Sequences of octets in {param vector} that cannot be decoded into
     characters according to {param external-format} will be decoded as
     {code #\\Replacement_Character}."))
-
+	
         (definition (:function encode-string-to-octets)
-	    "encode-string-to-octets string {code &key} start end external-format use-byte-order-mark vector vector-offset"
-	  nil
-	  "Encodes {param string} (or the substring delimited by
-           {param start} and {param end}) into {param external-format}
-           and returns, as multiple values, a vector of octets
+	    "encode-string-to-octets string &key start end external-format use-byte-order-mark vector vector-offset" nil
+	  "Encodes {param string} (or the substring of it delimited by
+           {param start} and {param end}) into {param vector} according to
+           {param external-format}.
+           It returns, as multiple values, the vector of octets
            containing the encoded data and an integer that specifies
            the offset into the vector where the encoded data ends.
   
@@ -340,7 +337,8 @@
 	  If {param vector} is supplied, output will be written to it.
           It must be of type {code (simple-array (unsigned-byte 8))}
           and be large enough to hold the encoded data.  If it is not
-          supplied, the function will allocate a new vector.
+          supplied, the function will allocate a new vector to hold
+          the output.
 
 	  If {param vector-offset} is supplied, data will be written
           into the output vector starting at that offset.
@@ -348,17 +346,17 @@
 	  Characters in {param string} that cannot be encoded into
           {param external-format} will be replaced with an
           encoding-dependent replacement character
-          ({code #\\Replacement_Character} or {code #\\Sub)} before
+          (either {code #\\Replacement_Character} or {code #\\Sub)} before
           being encoded and written into the output vector.")
 
         (definition (:function string-size-in-octets)
-	    "string-size-in-octets string {code &key} start end external-format use-byte-order-mark" nil
-	    "Returns the number of octets required to encode
-    {param string} (or the substring delimited by
-    {param start} and {param end}) into
-    {param external-format}."
+	    "string-size-in-octets string &key start end external-format use-byte-order-mark" nil
+	  "Returns the number of octets required to encode {param
+           string} (or the substring delimited by {code :start} and
+           {code :end}) according to {code :external-format}.
 
-	    "When {param use-byte-order-mark} is true, the returned
-    size will include space for a byte-order marker."))))
+	   When {param use-byte-order-mark} is true, the returned size
+           will include the space needed for a byte-order marker.")))
 
-  ) ;chapter
+) ;chapter
+

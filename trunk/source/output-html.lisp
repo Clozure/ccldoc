@@ -32,6 +32,7 @@
 (defmethod write-html ((clause document) stream)
   (write-string "<head>" stream)
   (terpri stream)
+  (format stream "<meta charset=\"utf-8\">~%")
   (format stream "<link rel=\"stylesheet\" type=\"text/css\" href=\"~a\" />"
 	  "ccldoc.css")
   (write-string "<title>" stream)
@@ -206,7 +207,7 @@
     (with-output-to-string (s)
       (format s "<code>~a</code> " (pop words))
       (dolist (w words)
-        (cond ((member w (list "&amp;key" "&amp;optional" "&amp;rest" "&amp;allow-other-keys")
+        (cond ((member w (list "&amp;key" "&amp;optional" "&amp;rest" "&amp;allow-other-keys" "&amp;body")
                        :test 'equalp)
                (format s "<code>~a</code> " w))
               ((and (char= (char w 0) #\()

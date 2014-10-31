@@ -35,28 +35,28 @@
     (term "Cocoa") "
 		windowing development environment provided in source form with
 		{CCL} distributions."))
-  (glossentry "image"
+  (glossentry "heap image"
    (para "The in-memory state of a running Lisp system, containing
 		functions, data structures, variables, and so on. Also, a file
 		containing archived versions of these data in a format that
 		can be loaded and reconstituted by the
 		Lisp "
-    (term "kernel") ". A
+    (term "lisp kernel") ". A
 		working {CCL} system consists of the kernel and
-		an "
-    (term "image") "."))
+		a "
+    (term "heap image") "."))
   (glossentry "InterfaceBuilder"
    (para "An application supplied by Apple with their developer
 		tools that can be used to interactively build user-interface
 		elements for "
     (term "Cocoa") "
 		applications."))
-  (glossentry "kernel"
+  (glossentry "lisp kernel"
    (para "The binary executable program that implements the lowest
 		levels of the Lisp system. A working {CCL} system consists of
 		the kernel and
-		an "
-    (term "image") "."))
+		a "
+    (term "heap image") "."))
   (glossentry "listener window"
    (para "In the " (term "IDE") ",
 		a "

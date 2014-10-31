@@ -2045,6 +2045,7 @@ Examples:|
           #_free, and the GC are all involved in the creation and eventual
           destruction of structure-typed return values. In some programs
           these operations may have an impact on performance.")))
+
     (definition (:reader-macro "#>") "#>" nil
      (defsection "Description"
        (para "In {CCL} 1.2 and later, the #> reader macro reads
@@ -2073,26 +2074,11 @@ Examples:|
 	      and
 	      causes any EXTERNAL-ENTRY-POINTs known to be defined by it to
 	      become unresolved.")))
+
     (definition (:macro defcallback)
      "defcallback name ({lbrace}arg-type-specifier var{rbrace}* {code &optional} result-type-specifier) {code &body} body"
      nil
-     (defsection "Values"
-       (listing :definition
-         (item "{param name}" ccldoc::=> "A symbol which can be made into a special variable")
-         (item "{param arg-type-specifer}" ccldoc::=> "One of the foreign argument-type keywords,
-		        described above, or an equivalent "
-          (ref (section "Specifying And Using Foreign Types") "foreign type specifier") ".  In addition, if the keyword
-		        :WITHOUT-INTERRUPTS is specified, the callback will be
-		        executed with lisp interrupts disabled if the
-		        corresponding var is non-NIL. If :WITHOUT-INTERRUPTS
-		        is specified more than once, the rightmost instance
-		        wins.")
-         (item "{param var}" ccldoc::=> "A symbol (lisp variable), which will be bound to a
-		        value of the specified type.")
-         (item "{param body}" ccldoc::=> "A sequence of lisp forms, which should return a value
-		        which can be coerced to the specified result-type.")))
-     (defsection "Description"
-       "Proclaims {param name}
+      (para "Proclaims {param name}
 	      to be a special variable; sets its value to a
 	      MACPTR which, when called by foreign code, calls a lisp function
 	      which expects foreign arguments of the specified types and which
@@ -2110,33 +2096,46 @@ Examples:|
 
 	      {function defcallback}
 	      returns the callback pointer, e.g., the
-	      value of {param name}."))
+	      value of {param name}.")
+     (defsection "Values"
+       (listing :definition
+         (item "{param name}" ccldoc::=> "A symbol which can be made into a special variable")
+         (item "{param arg-type-specifer}" ccldoc::=> "One of the foreign argument-type keywords,
+		        described above, or an equivalent "
+          (ref (section "Specifying And Using Foreign Types") "foreign type specifier") ".  In addition, if the keyword
+		        :WITHOUT-INTERRUPTS is specified, the callback will be
+		        executed with lisp interrupts disabled if the
+		        corresponding var is non-NIL. If :WITHOUT-INTERRUPTS
+		        is specified more than once, the rightmost instance
+		        wins.")
+         (item "{param var}" ccldoc::=> "A symbol (lisp variable), which will be bound to a
+		        value of the specified type.")
+         (item "{param body}" ccldoc::=> "A sequence of lisp forms, which should return a value
+		        which can be coerced to the specified result-type."))))
+
     (definition (:macro def-foreign-type) "def-foreign-type name foreign-type-spec" nil
+      "If name is non-{code nil}, defines {param name} to be an alias
+       for the foreign type specified by {param foreign-type-spec}. If
+       {param foreign-type-spec} is a named structure or union type,
+       additionally defines that structure or union type.
+
+       If name is {code nil}, {param foreign-type-spec} must be a
+       named foreign struct or union definition, in which case the
+       foreign structure or union definition is put in effect.
+
+       Note that there are two separate namespaces for foreign type
+       names: one for the names of ordinary types and one for the
+       names of structs and unions.  Which one {param name} refers to
+       depends on {param foreign-type-spec} in the obvious manner."
      (defsection "Values"
        (listing :definition
          (item "{param name}" ccldoc::=> "NIL or a keyword; the keyword may contain
 		        "
           (ref (section "Case-sensitivity of foreign names in {CCL}") "escaping constructs") ".")
          (item "{param foreign-type-spec}" ccldoc::=> "A foreign type specifier, whose syntax is (loosely)
-		        defined above.")))
-     (defsection "Description"
-       "If name is non-NIL, defines name to be an alias for the
-	      foreign type specified by foreign-type-spec. If foreign-type-spec
-	      is a named structure or union type, additionally defines that
-	      structure or union type.
+		        defined above."))))
 
-	      If name is NIL, foreign-type-spec must be a named foreign
-	      struct or union definition, in which case the foreign structure
-	      or
-	      union definition is put in effect.
-
-	      Note that there are two separate namespaces for foreign
-	      type names, one for the names of ordinary types and one for
-	      the names of structs and unions.  Which one
-	      {param name} refers to depends on
-	      {param foreign-type-spec} in the obvious manner.
-	    "))
-    (definition (:macro external) "external name => entry" "Resolves a reference to an external symbol which
+    (definition (:macro external) "external name" "Resolves a reference to an external symbol which
 	      is defined in a shared library."
      (defsection "Values"
        (listing :definition
@@ -2160,8 +2159,16 @@ Examples:|
 	      Be aware that under Darwin, external functions which
 	      are callable from C have underscores prepended to their names,
 	      as in "_fopen".|))
+
     (definition (:macro external-call)
      "external-call name {lbrace}arg-type-specifier arg{rbrace}* {code &optional} result-type-specifier" nil
+      (para "Calls the foreign function at the address obtained by
+	      resolving the external-entry-point associated with name, passing
+	      the values of each arg as a foreign argument of type indicated by
+	      the corresponding arg-type-specifier. Returns the foreign function
+	      result (coerced to a Lisp object of type indicated by
+	      result-type-specifier), or NIL if result-type-specifer is :VOID or
+	      NIL")
      (defsection "Values"
        (listing :definition
          (item "{param name}" ccldoc::=> "A lisp string. See external, above.")
@@ -2172,17 +2179,16 @@ Examples:|
 		        arg-type-specifier")
          (item "{param result-type-specifier}" ccldoc::=> "One of the foreign argument-type keywords, described
 		        above, or an equivalent "
-          (ref (section "Specifying And Using Foreign Types") "foreign type specifier") ".")))
-     (defsection "Description"
-       (para "Calls the foreign function at the address obtained by
-	      resolving the external-entry-point associated with name, passing
-	      the values of each arg as a foreign argument of type indicated by
-	      the corresponding arg-type-specifier. Returns the foreign function
-	      result (coerced to a Lisp object of type indicated by
-	      result-type-specifier), or NIL if result-type-specifer is :VOID or
-	      NIL")))
+          (ref (section "Specifying And Using Foreign Types") "foreign type specifier") "."))))
+
     (definition (:function %ff-call)
      "%ff-call entrypoint {lbrace}arg-type-keyword arg{rbrace}* {code &optional} result-type-keyword" nil
+      (para "Calls the foreign function at address entrypoint passing the
+	      values of each arg as a foreign argument of type indicated by the
+	      corresponding arg-type-keyword. Returns the foreign function
+	      result (coerced to a Lisp object of type indicated by
+	      result-type-keyword), or NIL if result-type-keyword is :VOID or
+	      NIL")
      (defsection "Values"
        (listing :definition
          (item "{param entrypoint}" ccldoc::=> "A fixnum or MACPTR")
@@ -2191,16 +2197,16 @@ Examples:|
          (item "{param arg}" ccldoc::=> "A lisp value of type indicated by the corresponding
 		        arg-type-keyword")
          (item "{param result-type-keyword}" ccldoc::=> "One of the foreign argument-type keywords, described
-		        above")))
-     (defsection "Description"
-       (para "Calls the foreign function at address entrypoint passing the
-	      values of each arg as a foreign argument of type indicated by the
-	      corresponding arg-type-keyword. Returns the foreign function
-	      result (coerced to a Lisp object of type indicated by
-	      result-type-keyword), or NIL if result-type-keyword is :VOID or
-	      NIL")))
+		        above"))))
+
     (definition (:macro ff-call)
      "ff-call entrypoint {lbrace}arg-type-specifier arg{rbrace}* {code &optional} result-type-specifier" nil
+       (para "Calls the foreign function at address entrypoint passing the
+	      values of each arg as a foreign argument of type indicated by the
+	      corresponding arg-type-specifier. Returns the foreign function
+	      result (coerced to a Lisp object of type indicated by
+	      result-type-specifier), or NIL if result-type-specifer is :VOID or
+	      NIL")
      (defsection "Values"
        (listing :definition
          (item "{param entrypoint}" ccldoc::=> "A fixnum or MACPTR")
@@ -2211,48 +2217,41 @@ Examples:|
 		        arg-type-specifier")
          (item "{param result-type-specifier}" ccldoc::=> "One of the foreign argument-type keywords, described
 		        above, or an equivalent "
-          (ref (section "Specifying And Using Foreign Types") "foreign type specifier") ".")))
-     (defsection "Description"
-       (para "Calls the foreign function at address entrypoint passing the
-	      values of each arg as a foreign argument of type indicated by the
-	      corresponding arg-type-specifier. Returns the foreign function
-	      result (coerced to a Lisp object of type indicated by
-	      result-type-specifier), or NIL if result-type-specifer is :VOID or
-	      NIL")))
+          (ref (section "Specifying And Using Foreign Types") "foreign type specifier") "."))))
+
     (definition (:function foreign-symbol-address) "foreign-symbol-address name" nil
-     (defsection "Values" (listing :definition (item "{param name}" ccldoc::=> "A lisp string.")))
-     (defsection "Description"
-       (para "Tries to resolve the address of the foreign symbol
-	      name. If successful, returns that address encapsulated in
-	      "
-        (ref (section "Referencing and Using Foreign Memory Addresses") "a MACPTR") ", else returns NIL.")))
-    (definition (:function foreign-symbol-entry) "foreign-symbol-entry name" nil
-     (defsection "Values" (listing :definition (item "{param name}" ccldoc::=> "A lisp string.")))
-     (defsection "Description"
-       (para "Tries to resolve the address of the foreign symbol name. If
-	      successful, returns a fixnum representation of that address, else
-	      returns NIL.")))
+      (para "This function tries to resolve the address of the foreign
+	     symbol {param name} (a lisp string). If successful, it
+	     returns that address encapsulated in a macptr; otherwise,
+	     it returns {code nil}."))
+
+    (definition (:function foreign-symbol-entry) "foreign-symbol-entry name"
+      nil
+      (para "This function rries to resolve the address of the foreign
+	     symbol {param name} (a lisp string). If successful, it
+	     returns a fixnum representation of that address.
+	     Otherwise, it returns {code nil}."))
+
     (definition (:function free) "free ptr" nil
-     (defsection "Values"
-       (listing :definition
-         (item "{param ptr}" ccldoc::=> "A {code MACPTR} that points to a block of
-		      foreign, heap-allocated memory.")))
-     (defsection "Description"
-       "In {CCL} 1.2 and later, the {code CCL:FREE}
-          function invokes the foreign {code free} function from
-          the platform's standard C library to deallocate a block of
-          foreign memory.
+      "Free the foreign memory pointed to by {param ptr} by invoking
+the standard C function {code free()}.  If {param ptr} is a gcable
+pointer (such as an object returned from {function
+make-gcable-record}), then {function free} first informs the garbage
+collector that the foreign memory has been deallocted before actually
+calling {code free()}.")
 
-          Previous versions of {CCL} implemented this function,
-          but it was not exported.
+    (definition (:function make-heap-ivector) "make-heap-ivector element-count element-type" nil
+	"An ivector is a one-dimensional array that's specialized to
+	 a numeric or character element type.
 
-        If the argument to {code CCL:FREE} is a gcable
-        pointer (for example, an object returned
-        by {code MAKE-GCABLE-RECORD})
-        then {code CCL:FREE} informs the garbage collector that
-        the foreign memory has been deallocated before calling the
-        foreign {code free} function."))
-    (definition (:function make-heap-ivector) "make-heap-ivector element-count element-type => vector macptr size" nil
+	 {function make-heap-ivector} allocates an ivector in
+	  foreign memory.  The GC will never move this vector, and
+	  will in fact not pay any attention to it at all.  The
+	  returned pointer to it can therefore be passed safely to
+	  foreign code.
+
+	  The vector must be explicitly deallocated with
+	  {function dispose-heap-ivector}."
      (defsection "Values"
        (listing :definition
          (item "{param element-count}" ccldoc::=> "A positive integer.")
@@ -2265,25 +2264,37 @@ Examples:|
 		      in the vector.
 		      ")
          (item "{param size}" ccldoc::=> "The size of the returned vector in octets.
-		      ")))
-     (defsection "Description"
-       #:|
-	An "ivector" is a one-dimensional array that's specialized to
-	a numeric or character element type.
-	
+		      "))))
 
-	  {code MAKE-HEAP-IVECTOR} allocates an ivector in
-	  foreign memory.  The GC will never move this vector, and
-	  will in fact not pay any attention to it at all.  The
-	  returned pointer to it can therefore be passed safely to
-	  foreign code.
-	
+    (definition (:macro ccl::make-gcable-record) "make-gcable-record typespec &rest initforms" nil
+      (para "Allocates a block of foreign memory suitable to hold the foreign
+	      type described by {param typespec}, in the same manner
+	      as " (ref (definition :macro make-record)) ". In
+	      addition, {macro make-gcable-record} marks the
+	      returned object gcable: in other words, it informs the garbage
+	      collector that it may reclaim the object when it becomes
+	      unreachable.")
+      (para "In all other respects, {macro make-gcable-record} works
+          the same way as " (ref (definition :macro make-record)) ".")
 
+      " When using gcable pointers, it's important to remember the
+          distinction between a {code macptr} object (which is a
+          lisp object, more or less like any other) and the block of
+          foreign memory that the {code macptr} object points to.
+          If a gcable {code macptr} object is the only thing in the
+          world (lisp world or foreign world) that references the
+          underlying block of foreign memory, then freeing the foreign
+          memory when it becomes impossible to reference it is convenient
+          and sane.  If other lisp {code macptr}s reference the
+          underlying block of foreign memory or if the address of that
+          foreign memory is passed to and retained by foreign code, having
+          the GC free the memory may have unpleasant consequences if those
+          other references are used.
 
-	  The vector must be explicitly deallocated with
-	  {code DISPOSE-HEAP-IVECTOR}.
-	|))
-    (definition (:macro ccl::make-gcable-record) "make-gcable-record typespec {code &rest} initforms => result" nil
+          Take care, therefore, not to create a gcable record unless
+          you are sure that the returned {code macptr} will be the
+          only reference to the allocated memory that will ever be
+          used."
      (defsection "Values"
        (listing :definition
          (item "{param typespec}" ccldoc::=> "A foreign type specifier, or a keyword which is used
@@ -2298,41 +2309,38 @@ Examples:|
 		        object returned by {function ccl::make-gcable-record}
 		        is freed when the garbage collector determines that
 		        the {code MACPTR} object that describes it is
-		        unreachable.")))
-     (defsection "Description"
-       (para "
-	      Allocates a block of foreign memory suitable to hold the foreign
-	      type described by {code typespec}, in the same manner
-	      as "
-        (ref (definition :macro make-record)) ". In
-	      addition, {code MAKE-GCABLE-RECORD} marks the
-	      returned object gcable; in other words, it informs the garbage
-	      collector that it may reclaim the object when it becomes
-	      unreachable.
-	    ")
-       (para "In all other respects, {code MAKE-GCABLE-RECORD} works
-          the same way
-          as "
-        (ref (definition :macro make-record)))
-       " When using gcable pointers, it's important to remember the
-          distinction between a {code MACPTR} object (which is a
-          lisp object, more or less like any other) and the block of
-          foreign memory that the {code MACPTR} object points to.
-          If a gcable {code MACPTR} object is the only thing in the
-          world (lisp world or foreign world) that references the
-          underlying block of foreign memory, then freeing the foreign
-          memory when it becomes impossible to reference it is convenient
-          and sane.  If other lisp {code MACPTR}s reference the
-          underlying block of foreign memory or if the address of that
-          foreign memory is passed to and retained by foreign code, having
-          the GC free the memory may have unpleasant consequences if those
-          other references are used.
+		        unreachable."))))
 
-          Take care, therefore, not to create a gcable record unless
-          you are sure that the returned {code MACPTR} will be the
-          only reference to the allocated memory that will ever be
-          used."))
-    (definition (:macro make-record) "make-record typespec {code &rest} initforms => result" nil
+    (definition (:macro make-record) "make-record typespec {code &rest} initforms" nil
+       "Expands into code which allocates and initializes an instance
+	of the type denoted by {param typespec}, on the foreign heap.
+	The record is allocated using the C function {function
+	malloc}, and the user of {function make-record} must
+	explicitly call the function {function free} to deallocate the
+	record, when it is no longer needed.
+	    
+        If {param initforms} is provided, its value or values are used
+	in the initialization.  When the type is a scalar, {param
+	initforms} is either a single value which can be coerced to
+	that type, or no value, in which case binary 0 is used.  When
+	the type is a {code struct}, {param initforms} is a list,
+	giving field names and the values for each.  Each field is
+	treated in the same way as a scalar is: If a value for it is
+	given, it must be coerceable to the field's type; if not,
+	binary 0 is used.
+
+        When the type is an array, {param initforms} may not be
+	provided, because {function make-record} cannot initialize its
+	values.  {function make-record} is also unable to initialize
+	fields of a {code struct} which are themselves {code struct}s.
+	The user of {function make-record} should set these values by
+	another means.
+
+        A possibly-significant limitation is that it must be possible
+	to find the foreign type at the time the macro is expanded;
+	{function make-record} signals an error if this is not the
+	case."
+
      (defsection "Values"
        (listing :definition
          (item "{param typespec}" ccldoc::=> "A foreign type specifier, or a keyword which is used
@@ -2345,65 +2353,21 @@ Examples:|
 		        A {type macptr} which encapsulates the address of a
 		        newly-allocated record on the foreign heap.
 		      ")))
-     (defsection "Description"
-       "
-	      Expands into code which allocates and initializes
-	      an instance of the type 
-	      denoted by {param typespec}, on the foreign
-	      heap.  The record is allocated using the C function
-	      {function ccl::malloc}, and the user of
-	      {function make-record} must explicitly call
-	      the function {function free} to deallocate the
-	      record, when it is no longer needed.
-	    
-
-
-	      If {param initforms} is provided, its value
-	      or values are used in the initialization.  When the type
-	      is a scalar, {param initforms} is either a single
-	      value which can be coerced to that type, or no value, in which
-	      case binary 0 is used.  When the type is a {code struct},
-	      {param initforms} is a list, giving field names
-	      and the values for each.  Each field is treated in the same way
-	      as a scalar is: If a value for it is given, it must be
-	      coerceable to the field's type; if not, binary 0 is used.
-	    
-
-
-	      When the type is an array, {param initforms} may
-	      not be provided, because {function make-record}
-	      cannot initialize its values.  {function make-record}
-	      is also unable to initialize fields of a {code struct}
-	      which are themselves
-	      {code struct}s.  The user of
-	      {function make-record} should set these values
-	      by another means.
-	    
-
-
-	      A possibly-significant limitation is that it must be possible to
-	      find the foreign type at the time the macro is expanded;
-	      {function make-record} signals an error if this is
-	      not the case.
-	    ")
      (defsection "Notes"
        "
 	      It is inconvenient that {function make-record} is a
 	      macro, because this means that {param typespec}
 	      cannot be a variable; it must be an immediate value.
-	    
-
 
 	      If it weren't for this requirement,
 	      {function make-record} could be a function.  However,
 	      that would mean that any stand-alone application using it would
 	      have to include a copy of the interface database
 	      (see {section The Interface Database}), which is undesirable
-	      because it's large.
-	    "))
-    (definition (:function open-shared-library) "open-shared-library name => library"
-     "Asks the operating system to load a shared library
-	      for {CCL} to use."
+	      because it's large."))
+
+    (definition (:function open-shared-library) "open-shared-library name"
+     "Asks the operating system to load a shared library for {CCL} to use."
      (defsection "Values"
        (listing :definition
          (item "{param name}" ccldoc::=> "A SIMPLE-STRING which is presumed to be the so-name of
@@ -2456,116 +2420,84 @@ Examples:|
 
 	      Does the SHLIB still get returned if the library is
 	      already open?"))
+
     (definition (:macro pref) "pref ptr accessor-form" nil
+      "References an instance of a foreign type (or a component of a
+       foreign type) accessible via {param ptr}.
+
+       Expands into code which references the indicated scalar type
+       or component, or returns a pointer to a composite type.
+
+       PREF can be used with SETF."
+
      (defsection "Values"
        (listing :definition
          (item "{param ptr}" ccldoc::=> (ref (section "Referencing and Using Foreign Memory Addresses") "a MACPTR")
           ".")
          (item "{param accessor-form}" ccldoc::=> "a keyword which names a foreign type or record, as
 		        described in {section Foreign type, record, and field names}.
-		      ")))
-     (defsection "Description"
-       "References an instance of a foreign type (or a component of
-	      a foreign type) accessible via ptr.
+		      "))))
 
-	      Expands into code which references the indicated scalar type
-	      or component, or returns a pointer to a composite type.
-
-PREF can be used with SETF.
-
-	      RREF is a deprecated alternative to PREF. It accepts a
-	      :STORAGE keyword and rather loudly ignores it."))
     (definition (:function %reference-external-entry-point) "%reference-external-entry-point eep" nil
+      (para "Tries to resolve the address of the external-entry-point
+	     {param eep} and returns a fixnum representation of that address if
+	     successful; else signals an error.")
      (defsection "Values"
        (listing :definition
          (item "{param eep}" ccldoc::=> "An EXTERNAL-ENTRY-POINT, as obtained by the EXTERNAL
-		        macro.")))
-     (defsection "Description"
-       (para "Tries to resolve the address of the EXTERNAL-ENTRY-POINT
-	      eep; returns a fixnum representation of that address if
-	      successful, else signals an error.")))
-    (definition (:macro rlet) "rlet (var typespec {code &rest} initforms)* {code &body} body" nil
+		        macro."))))
+
+    (definition (:macro rlet) "rlet (var typespec {code &rest} initforms)* &body body" nil
+       (para "Executes {param body} in an environment in which each
+	      var is bound to a macptr encapsulating the 
+	      address of a stack-allocated foreign memory block, allocated and
+	      initialized from {param typespec} and {param initforms} as per"
+              (ref (definition :macro make-record)) ". Returns
+              whatever values {param body} returns.")
+       (para "Record fields that aren't explicitly initialized have
+	      unspecified contents.")
      (defsection "Values"
        (listing :definition
          (item "{param var}" ccldoc::=> "A symbol (a lisp variable)")
          (item "{param typespec}" ccldoc::=> "A foreign type specifier or foreign record name.")
          (item "{param initforms}" ccldoc::=> "As described above, for
 		        "
-          (ref (definition :macro make-record)))))
-     (defsection "Description"
-       (para "Executes {param body}
-	      in an environment in which each var is bound
-	      to "
-        (ref (section "Referencing and Using Foreign Memory Addresses") "a MACPTR") " encapsulating the
-	      address of a stack-allocated foreign memory block, allocated and
-	      initialized from typespec and initforms as per
-	      "
-        (ref (definition :macro make-record)) ".
-	      Returns whatever value(s) {param body}
-	      returns.")
-       (para "Record fields that aren't explicitly initialized have
-	      unspecified contents.")))
+          (ref (definition :macro make-record))))))
+
     (definition (:macro rletz) "rletz (var typespec {code &rest} initforms)* {code &body} body" nil
-     (defsection "Values"
-       (listing :definition
-         (item "{param var}" ccldoc::=> "A symbol (a lisp variable)")
-         (item "{param typespec}" ccldoc::=> "A foreign type specifier or foreign record name.")
-         (item "{param initforms}" ccldoc::=> "As described above, for ccl:make-record")))
-     (defsection "Description"
-       (para "Executes body in an environment in which each var is
-	      bound to "
-        (ref (section "Referencing and Using Foreign Memory Addresses") "a MACPTR")
-        " encapsulating the address of a stack-allocated
-	      foreign memory block, allocated and initialized from
-	      typespec and initforms as ccl:make-record.")
-       "Returns whatever value(s) body returns.
+     "This macro is just like {macro rlet}, except that the stack-allocated
+      foreign memory is zeroed.")
 
-	      Unlike rlet, record fields that aren't explicitly
-	      initialized are set to binary 0."))
     (definition (:function terminate-when-unreachable) "terminate-when-unreachable object" nil
+      "The termination mechanism is a way to have the garbage
+       collector run a function right before an object is about to
+       become garbage.  It is very similar to the finalization
+       mechanism which Java has.  It is not standard Common Lisp,
+       although other Lisp implementations have similar features.  It
+       is useful when there is some sort of special cleanup,
+       deallocation, or releasing of resources which needs to happen
+       when a certain object is no longer being used.
+
+       When the garbage collector discovers that an object is no
+       longer referred to anywhere in the program, it deallocates that
+       object, freeing its memory.  However, if {function
+       terminate-when-unreachable} has been called on the object at
+       any time, the garbage collector first invokes the generic
+       function {function terminate}, passing it the object as a
+       parameter.
+
+       Therefore, to make termination do something useful, you need to
+       define a method on {function terminate}.
+
+       Because calling {function terminate-when-unreachable} only
+       affects a single object, rather than all objects of its class,
+       you may wish to put a call to it in the {function
+       initialize-instance} method of a class.  Of course, this is
+       only appropriate if you do in fact want to use termination for
+       all objects of a given class."
      (defsection "Values"
        (listing :definition
-         (item "{param object}" ccldoc::=> "A CLOS object of a class for which there exists
-		        a method of the generic function
-		        {function terminate}.
-		      ")))
-     (defsection "Description"
-       #:|
-	      The "termination" mechanism is a way to have the garbage
-	      collector run a function right before an object is about to
-	      become garbage.  It is very similar to the "finalization"
-	      mechanism which Java has.  It is not standard Common Lisp,
-	      although other Lisp implementations have similar features.
-	      It is useful when there is some sort of special cleanup,
-	      deallocation, or releasing of resources which needs to happen
-	      when a certain object is no longer being used.
-	    
-
-
-	      When the garbage collector discovers that an object is no
-	      longer referred to anywhere in the program, it deallocates
-	      that object, freeing its memory.  However, if
-	      {function terminate-when-unreachable} has been
-	      called on the object at any time, the garbage collector first
-	      invokes the generic function {function terminate},
-	      passing it the object as a parameter.
-	    
-
-
-	      Therefore, to make termination do something useful, you need to
-	      define a method on {function terminate}.
-	    
-
-
-	      Because calling
-	      {function terminate-when-unreachable} only
-	      affects a single object, rather than all objects of its
-	      class, you
-	      may wish to put a call to it in the
-	      {function initialize-instance} method of a
-	      class.  Of course, this is only appropriate if you do in fact
-	      want to use termination for all objects of a given class.
-	    |)
+         (item "{param object}" ccldoc::=> "A CLOS object of a class for which there exists a method of the generic function {function terminate}.")))
      (defsection "Example"
        (code-block "
           (defclass resource-wrapper ()
@@ -2578,25 +2510,18 @@ PREF can be used with SETF.
              (when (resource x)
                 (deallocate (resource x))))"))
      (defsection "See Also" (clause "{section Tutorial: Allocating Foreign Data on the Lisp Heap }")))
+
     (definition (:function unuse-interface-dir) "unuse-interface-dir dir-id" nil
+      (para "Tells {CCL} to remove the interface directory denoted by
+	      {param dir-id} from the list of interface directories which are
+	      consulted for foreign type and function
+	      information. Returns T if the directory was on the
+	      search list, NIL otherwise.")
      (defsection "Values"
        (listing :definition
-         (item "{param dir-id}" ccldoc::=> #:|A keyword whose pname, mapped to lower case, names a
-		        subdirectory of "ccl:headers;" (or
-		        "ccl:darwin-headers;")|)))
-     (defsection "Description"
-       (para "Tells {CCL} to remove the interface directory denoted by
-	      dir-id from the list of interface directories which are
-	      consulted for
-	      foreign type and function information. Returns T if the directory
-	      was on the search list, NIL otherwise.")))
+         (item "{param dir-id}" ccldoc::=> #:|A keyword whose pname, mapped to lower case, names a subdirectory of "ccl:headers;" (or "ccl:darwin-headers;")|))))
+
     (definition (:function use-interface-dir) "use-interface-dir dir-id" nil
-     (defsection "Values"
-       (listing :definition
-         (item "{param dir-id}" ccldoc::=> #:|A keyword whose pname, mapped to lower case, names a
-		        subdirectory of "ccl:headers;" (or
-		        "ccl:darwin-headers;")|)))
-     (defsection "Description"
        (para "Tells {CCL} to add the interface directory denoted by
 	      dir-id to the list of interface directories which it consults for
 	      foreign type and function information. Arranges that that
@@ -2615,7 +2540,12 @@ PREF can be used with SETF.
 	      function information. "
         (ref (definition :function unuse-interface-dir)) "
 	      may come in
-	      handy in that case."))
+	      handy in that case.")
+     (defsection "Values"
+       (listing :definition
+         (item "{param dir-id}" ccldoc::=> #:|A keyword whose pname, mapped to lower case, names a
+		        subdirectory of "ccl:headers;" (or
+		        "ccl:darwin-headers;")|)))
      (defsection "Examples"
        (para "One typically wants interface information to be
 	      available at compile-time (or, in many cases, at read-time).
