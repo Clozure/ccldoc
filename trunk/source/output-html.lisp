@@ -132,6 +132,9 @@
 
 (defmethod write-html ((clause table) stream)
   (write-string "<table>" stream)
+  (format stream "~&<caption>")
+  (write-html (clause-title clause) stream)
+  (format stream "</caption>~%")
   (loop for row across (clause-items clause)
 	do (write-html row stream))
   (write-string "</table>" stream)
