@@ -238,7 +238,7 @@ joe:ccl>
     that you downloaded.
 
     Replace {sample kernel-filename} with the filename of the Lisp kernel program.
-    To find the filename of a Lisp kernel image for your particular platform, see {section Platform-specific filename conventions}.
+    To find the filename of a Lisp kernel image for your particular platform, see " (ref (table "Platform-specific filename conventions")) ".
     
 
     Specifying the {code --no-init} option ensures that personal initializations do not interfere

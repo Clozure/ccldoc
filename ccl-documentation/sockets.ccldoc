@@ -54,7 +54,7 @@
   (defsection "Sockets Dictionary"
     (definition (:function make-socket)
      "make-socket {code &key} address-family type connect eol format remote-address remote-host remote-port local-address local-host local-port local-filename remote-filename keepalive reuse-address nodelay broadcast linger backlog input-timeout output-timeout connect-timeout auto-close deadline"
-     nil
+     "Make a socket."
      (defsection "Arguments and Values"
        (listing :definition
          (item "{param address-family}" ccldoc::=> "The address/protocol family of this
@@ -171,34 +171,45 @@
 	  :remote-host and :remote-port, or the :remote-filename
 	  arguments must be present, depending on the socket
 	  type.")))
-    (definition (:function accept-connection) "accept-connection (socket listener-socket) {code &key} wait" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param socket}" ccldoc::=> "The listener-socket to listen on.")
-         (item "{param wait}" ccldoc::=> "If true (the default), and there are no connections
-		waiting to be accepted, waits until one arrives. If false,
-		returns NIL immediately.")))
-     (defsection "Description"
-       (para "Extracts the first connection on the queue of pending
-	  connections, accepts it (i.e. completes the connection startup
-	  protocol) and returns a new tcp-stream or file-socket-stream
-	  representing the newly established connection. The tcp stream
-	  inherits any properties of the listener socket that are relevant
-	  (e.g. :keepalive, :nodelay, etc.) The original listener socket
-	  continues to be open listening for more connections, so you can
-	  call accept-connection on it again.")))
+
+    (definition (:function accept-connection) "accept-connection (socket listener-socket) code &key (wait t)" nil
+      (para "Extracts the first connection on the queue of pending
+	  connections for {param socket}, accepts it (i.e. completes
+	  the connection startup protocol), and returns a new
+	  tcp-stream or file-socket-stream representing the newly
+	  established connection. The tcp stream inherits any
+	  properties of the listener socket that are relevant
+	  (e.g. {code :keepalive}, {code :nodelay}, and so forth.) The
+	  original listener socket continues to be open listening for
+	  more connections, so you can call accept-connection on it
+	  again.")
+
+      (para "If {code :wait} is {code t}, and there are no connections
+             waiting to be accepted, the function wait until one
+             arrives.  Otherwise, {function accept-connection} will
+             return {code nil} immediately."))
+
     (definition (:function ccl::resolve-address)
      "resolve-address {code &key} host port socket-type connect address-family numeric-host-p numeric-service-p singlep errorp"
      nil
+      (para "Converts a host and/or port specification to one or more "
+        (ref (definition :class ccl::socket-address)) " instances.
+	  This function uses the getaddrinfo() system function
+	  underneath which knows how to translate all standard address
+	  and port formats and appropriately orders adresses for hosts
+	  with multiple addresses.  It returns the best matching
+	  translation or, if the {code :singlep} is false, all
+	  matching translations for the given parameter
+	  combination.")
      (defsection "Arguments and Values"
        (listing :definition
-         (item "{param host}" ccldoc::=> #:|Specification of the host, as a string.  This
+         (item "{param host}" ccldoc::=> "Specification of the host, as a string.  This
 		can be either a host name such as
-		"clozure.com" or any of the literal address
-		forms accepted by getaddrinfo().|)
-         (item "{param port}" ccldoc::=> #:|Specification of the port.  This
+		“clozure.com” or any of the literal address
+		forms accepted by getaddrinfo().")
+         (item "{param port}" ccldoc::=> "Specification of the port.  This
 		can be either a service name such as
-		"http" or a port number.|)
+		“http” or a port number.")
          (item "{param socket-type}" ccldoc::=> "Service type for port lookups, can be either
 		:stream for TCP services or :datagram for UDP.
 		Defaults to :stream.")
@@ -231,70 +242,63 @@
 		host and/or port combination did not yield any
 		matches.  If it is passed as NIL, the function returns
 		NIL if no addresses matched the supplied
-		arguments.")))
-     (defsection "Description"
-       (para "Converts a host and/or port specification to one or
-	  more "
-        (ref (definition :class ccl::socket-address)) " instances.  This
-	  function uses the getaddrinfo() system function underneath
-	  which knows how to translate all standard address and port
-	  formats and appropriately orders adresses for hosts with
-	  multiple addresses.  It returns the best matching
-	  translation or, if the :singlep argument is passed as false,
-	  or all matching translations for the given parameter
-	  combination.")))
-    (definition (:function dotted-to-ipaddr) "dotted-to-ipaddr dotted {code &key} errorp" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param dotted}" ccldoc::=> #:|A string representing an IP address in the
-		"nn.nn.nn.nn" format|)
-         (item "{param errorp}" ccldoc::=> "If true (the default) an error is signaled if dotted
-		is invalid. If false, NIL is returned.")))
-     (defsection "Description"
-       (para "Converts a dotted-string representation of a host address to
-	  a 32-bit unsigned IP address.")))
-    (definition (:function ipaddr-to-dotted) "ipaddr-to-dotted ipaddr {code &key} values" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param ipaddr}" ccldoc::=> "A 32-bit integer representing an IPv4 host
-		address")
-         (item "{param values}" ccldoc::=> #:|If false (the default), returns a string in the form
-		"nn.nn.nn.nn". If true, returns four values
-		representing the four octets of the address as unsigned
-		8-bit integers.|)))
-     (defsection "Description" (para "Converts a 32-bit unsigned IPv4 address into octets.")))
+		arguments."))))
+
+    (definition (:function dotted-to-ipaddr) "dotted-to-ipaddr dotted &key (errorp t)" nil
+     "Converts {param dotted}, which should be a dotted quad string such
+as “192.168.0.1”, into a integer representation.  If {code :errorp} is true,
+an error is signaled if {param dotted} is invalid.  Otherwise, {code nil} is
+returned.")
+
+    (definition (:function ipaddr-to-dotted) "ipaddr-to-dotted ipaddr &key values" nil
+      "This function converts {param ipaddr}, an integer representing
+an IPv4 host, into a dotted quad string.  If {code :values} is true,
+instead of a dotted quad string, it returns the four octets of the
+address as multiple values.")
+
     (definition (:function ipaddr-to-hostname) "ipaddr-to-hostname ipaddr {code &key} ignore-cache" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param ipaddr}" ccldoc::=> "a 32-bit integer representing an IPv4 host address")
-         (item "{param ignore-cache}" ccldoc::=> "This argument is ignored (it is accepted for
-		compatibility with Franz Allegro)")))
-     (defsection "Description"
-       (para "Converts a 32-bit unsigned IPv4 address into a host name
-	  string")))
-    (definition (:function lookup-hostname) "lookup-hostname host" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param host}" ccldoc::=> #:|Specifies the host. It can be either a host name
-		string such as "clozure.com", or a dotted address
-		string such as "192.168.0.1", or a 32-bit unsigned
-		IPv4 address such as 3232235521.|)))
-     (defsection "Description"
-       (para "Converts a host spec in any of the acceptable formats
-	  into a 32-bit unsigned IPv4 address.  IPv6-enabled
-	  applications should use the "
-        (ref (definition :function ccl::resolve-address)) " function instead.")))
+      (para "Converts {param ipaddr}, a 32-bit unsigend integer, into
+a host name string.  The keyword argument {code :ignore-cache} is
+ignored (it is accepted for compatibility with Franz Allegro CL)."))
+
+    (definition (:function lookup-hostname) "lookup-hostname host-spec" nil
+      (para "Converts {param host-spec} into a 32-bit unsigned IPv4
+	address.  IPv6-enabled applications should use the "
+        (ref (definition :function ccl::resolve-address)) " function instead.")
+      (para "Acceptable formats for {param host-spec} include a host name
+string such as “www.clozure.com”, a dotted address string such as “192.168.0.1”,
+or a 32-bit unsigned IPv4 address such as 3232235521."))
+
     (definition (:function lookup-port) "lookup-port port protocol" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param port}" ccldoc::=> #:|Specifies the port. It can be either a string,
-		such as "http" or a symbol, such as :http, or
-		an unsigned port number. Note that a string is
-		case-sensitive. A symbol is lowercased before
-		lookup.|)
-         (item "{param protocol}" ccldoc::=> #:|Must be one of "tcp" or "udp".|)))
-     (defsection "Description" (para "Finds the port number for the specified port and protocol")))
-    (definition (:function receive-from) "receive-from (socket udp-socket) size {code &key} buffer extract offset" nil
+      "Finds the numeric port number for the specified {param port} and
+{param protocol}."
+
+      "{param port} can be a string such as “http”, a symbol such as
+{code :http}, or a port number.  Note that strings are case-sensitive.
+Symbol names are converted to lower-case before lookup.  Protocol must
+be one of “tcp” or “udp”.")
+
+    (definition (:function receive-from) "receive-from (socket udp-socket) size code &key buffer extract offset want-socket-address-p" nil
+      "Reads a UDP packet from {param socket}. If no packets are
+available, waits for a packet to arrive.
+
+If :want-socket-address-p is {code nil}, which is the
+default, four values are returned:"
+       (listing :number
+         (item "The buffer with the data")
+         (item "The number of bytes read")
+         (item "The 32-bit unsigned IPv4 address or the 16 byte
+	      IPv6 addresss of the sender of the data")
+         (item "The port number of the sender of the data"))
+
+       (para "If :want-socket-address-p is true, three values are
+          returned:")
+       (listing :number
+         (item "The buffer with the data")
+         (item "The number of bytes read")
+         (item "The " (ref (definition :class ccl::socket-address)) " instance of
+	      the sender of the data."))
+
      (defsection "Arguments and Values"
        (listing :definition
          (item "{param socket}" ccldoc::=> "The socket to read from")
@@ -313,28 +317,11 @@
          (item "{param want-socket-address-p}" ccldoc::=> "Indicates that the address of the sender of the
 		data should be returned as a "
           (ref (definition :class ccl::socket-address)) " instance rather than as
-		separate host and port values.")))
-     (defsection "Description"
-       "Reads a UDP packet from a socket. If no packets are
-	  available, waits for a packet to arrive.
+		separate host and port values."))))
 
-          If :want-socket-address-p is NIL, which is the
-          default, four values are returned:"
-       (listing :number
-         (item "The buffer with the data")
-         (item "The number of bytes read")
-         (item "The 32-bit unsigned IPv4 address or the 16 byte
-	      IPv6 addresss of the sender of the data")
-         (item "The port number of the sender of the data"))
-       (para "If :want-socket-address-p is true, three values are
-          returned:")
-       (listing :number
-         (item "The buffer with the data")
-         (item "The number of bytes read")
-         (item "The " (ref (definition :class ccl::socket-address)) " instance of
-	      the sender of the data."))))
     (definition (:function send-to)
-     "send-to (socket udp-socket) buffer size {code &key} remote remote-host remote-port offset" nil
+     "send-to (socket udp-socket) buffer size code &key remote remote-host remote-port offset" nil
+     "This function sends a UDP packet over {param socket}."
      (defsection "Arguments and Values"
        (listing :definition
          (item "{param socket}" ccldoc::=> "The socket to write to")
@@ -352,136 +339,112 @@
          (item "{param remote-port}" ccldoc::=> "The port to send the packet to, in any format
 		acceptable to lookup-port. The default is the remote port
 		specified in the call to make-socket.")
-         (item "{param offset}" ccldoc::=> "The offset in the buffer where the packet data starts")))
-     (defsection "Description" (para "Send a UDP packet over a socket.")))
-    (definition (:function shutdown) "shutdown socket {code &key} direction" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param socket}" ccldoc::=> "The socket to shut down (typically a tcp-stream)")
-         (item "{param direction}" ccldoc::=> "One of :input to disallow further input, or :output to
-		disallow further output.")))
-     (defsection "Description"
-       (para "Shuts down part of a bidirectional connection. This is
-	  useful if e.g. you need to read responses after sending an
-	  end-of-file signal.")))
+         (item "{param offset}" ccldoc::=> "The offset in the buffer where the packet data starts"))))
+
+    (definition (:function shutdown) "shutdown socket &key direction" nil
+       "Shuts down part of a bidirectional connection represented by
+        {param socket}. Typcially {param socket} will be a tcp-stream.
+        One situation where this can be useful is when you need to
+        read responses after sending an end-of-file signal.  The
+        keyword argument {code :direction} may be either
+        {code :input} (to disallow further input) or
+        {code :output} (to disallow further output).")
+
     (definition (:function socket-os-fd) "socket-os-fd socket" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket}" ccldoc::=> "The socket")))
-     (defsection "Description"
-       (para "Returns the native OS's representation of the socket, or
-	  NIL if the socket is closed. On Unix, this is the Unix 'file
-	  descriptor', a small non-negative integer. Note that it is
-	  rather dangerous to mess around with tcp-stream fd's, as there
-	  is all sorts of buffering and asynchronous I/O going on above the
-	  OS level. listener-socket and udp-socket fd's are safer to
-	  mess with directly as there is less magic going on.")))
+       (para "Returns the native OS's representation of {param
+	  socket}, or {code nil} if the socket is closed. On Unix,
+	  this will be a file descriptor. Note that it is rather
+	  dangerous to mess around with tcp-stream file descriptors,
+	  as there is all sorts of buffering and asynchronous I/O
+	  going on above the OS level. listener-socket and udp-socket
+	  file descriptors are safer to mess with directly as there is
+	  less magic going on."))
+
     (definition (:function remote-host) "remote-host socket" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket}" ccldoc::=> "The socket")))
-     (defsection "Description"
        (para "Returns the 32-bit unsigned IPv4 address of the remote host,
-	  or NIL if the socket is not connected.")))
+	  or {code nil} if {param socket} is not connected."))
+
     (definition (:function remote-port) "remote-port socket" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket}" ccldoc::=> "The socket")))
-     (defsection "Description"
-       (para "Returns the remote port number, or NIL if the socket is not
-	  connected.")))
+      (para "Returns the remote port number of {param socket}, or NIL if
+{param socket} is not connected."))
+
     (definition (:function local-host) "local-host socket" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket}" ccldoc::=> "The socket")))
-     (defsection "Description"
        (para "Returns 32-bit unsigned IPv4 address or the 16 byte
-	  IPv6 address of the local host.")))
+	  IPv6 address of the local host for {param socket}."))
+
     (definition (:function local-port) "local-port socket" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket}" ccldoc::=> "The socket")))
-     (defsection "Description" (para "Returns the local port number")))
+     "This function returns the local port number of {param socket}.")
+
     (definition (:function socket-address-family) "socket-address-family thing" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param thing}" ccldoc::=> "The socket or socket-address for which the
-		address family is to be queried.")))
-     (defsection "Description" (para "Returns :internet, :internet6 or :file, as appropriate.")))
+     "Returns :internet, :internet6 or :file, as appropriate for
+{param thing}, which should be a socket or socket-address.")
+
     (definition (:function ccl::socket-address-host) "socket-address-host socket-address" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param socket-address}" ccldoc::=> "The socket-address for which the
-		host address is to be queried.")))
-     (defsection "Description"
-       (para "Returns the host portion of the given socket-address.
-	  For :internet addresses, this is a 32-bit integer.  For
-	  :internet6 addresses, an array of 16 bytes returned.  For
-	  :file addresses, it is the file name string.")))
+      "Returns the host portion of the given {param socket-address}.
+       For :internet addresses, this is a 32-bit integer.  For
+	  :internet6 addresses, a vector of 16 bytes returned.  For
+	  :file addresses, it is the file name string.")
+
     (definition (:function ccl::socket-address-port) "socket-address-port socket-address" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param socket-address}" ccldoc::=> "The socket-address for which the
-		port number is to be queried.")))
-     (defsection "Description"
-       (para "Returns the port number of the given socket-address.
-	  This function is available only for :internet and :internet6
-	  socket addresses.")))
+       "This function returns the port number of the given {param
+        socket-address}.  This function is available only for
+        {code :internet} and {code :internet6} socket addresses.")
+
     (definition (:function socket-connect) "socket-connect socket" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket}" ccldoc::=> "The socket")))
-     (defsection "Description"
-       (para "Returns :active for tcp-stream, :passive for
-	  listener-socket, and NIL for udp-socket")))
+       "This function examines {param socket} and returns
+{code :active} for a tcp-stream, {code :passive} for listener-socket,
+and {code nil} for a udp-socket.")
+
     (definition (:function socket-format) "socket-format socket" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket}" ccldoc::=> "The socket")))
-     (defsection "Description"
-       (para "Returns the socket format as specified by the :format
-	  argument to make-socket.")))
+       "Returns the format of {param socket} as specified by
+	the :format argument to make-socket.")
+
     (definition (:function socket-type) "socket-type socket" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket}" ccldoc::=> "The socket")))
-     (defsection "Description"
-       (para "returns :stream for tcp-stream and listener-socket, and
-	  :datagram for udp-socket.")))
-    (definition (:class ccl::socket-address) "SOCKET-ADDRESS" nil
-     (defsection "Description"
-       (para "Representation of a socket endpoint address.
+       (para "This function returns :stream if {param socket} is a
+       tcp-stream or listener-socket.  If the socket is a udp-socket,
+{function socket-type} will return :datagram."))
+
+    (definition (:class ccl::socket-address) "socket-address" nil
+       (para "This class is a representation of a socket endpoint address.
           Instances of this class are used to encapsulate the host and
           port of an IP socket endpoint or the filename of a file
           socket.  They can be created by applications from a possibly
           symbolic address representation by the "
-        (ref (definition :function ccl::resolve-address)) " function.")))
-    (definition (:class socket-error) "SOCKET-ERROR" nil
-     (defsection "Description" (para "The class of OS errors signaled by socket functions"))
-     (defsection "Superclasses" (para "simple-error")))
-    (definition (:function socket-error-code) "socket-error-code socket-error" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket-error}" ccldoc::=> "the condition")))
-     (defsection "Description" (para "The OS error code of the error")))
-    (definition (:function socket-error-identifier) "socket-error-identifier socket-error" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket-error}" ccldoc::=> "the condition")))
-     (defsection "Description"
-       "A symbol representing the error code in a more
-	  OS-independent way.
+        (ref (definition :function ccl::resolve-address)) " function."))
 
-	  One of: :address-in-use :connection-aborted :no-buffer-space
-	  :connection-timed-out :connection-refused :host-unreachable
-	  :host-down :network-down :address-not-available :network-reset
-	  :connection-reset :shutdown :access-denied or :unknown."))
+    (definition (:class socket-error) "socket-error" nil
+     "The class of OS errors signaled by socket functions (a subclass
+of {code simple-error}.")
+
+    (definition (:function socket-error-code) "socket-error-code socket-error"
+      nil
+      "Returns the OS error code contained in {param socket-error}.")
+
+    (definition (:function socket-error-identifier) "socket-error-identifier socket-error" nil
+      "Returns a symbol representing the socket error code contained
+       in {param socket-error}.  It will be one of
+       {code :address-in-use}, {code :connection-aborted},
+       {code :no-buffer-space}, {code :connection-timed-out},
+       {code :connection-refused}, {code :host-unreachable},
+       {code :host-down}, {code :network-down},
+       {code :address-not-available}, {code :network-reset},
+       {code :connection-reset}, {code :shutdown},
+       {code :access-denied}, or {code :unknown}.")
+
     (definition (:function socket-error-situation) "socket-error-situation socket-error" nil
-     (defsection "Arguments and Values" (listing :definition (item "{param socket-error}" ccldoc::=> "the condition")))
-     (defsection "Description"
-       (para "A string describing the context where the error happened. On
-	  Linux, this is the name of the system call which returned the
-	  error.")))
-    (definition (:method close) "close (socket socket) {code &key} abort" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param socket}" ccldoc::=> "The socket to close")
-         (item "{param abort}" ccldoc::=> "If false (the default), closes the socket in an
-		orderly fashion, finishing up any buffered pending I/O,
-		before closing the connection. If true, aborts/ignores
-		pending I/O. (For listener and udp sockets, this argument is
-		effectively ignored since there is never any buffered I/O to
-		clean up).")))
-     (defsection "Description"
-       (para "The close generic function can be applied to sockets. It
-	  releases the operating system resources associated with the
-	  socket.")))
-    (definition (:macro with-open-socket) "with-open-socket (var . make-socket-args) {code &body} body" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param var}" ccldoc::=> "variable to bind")
-         (item "{param make-socket-args}" ccldoc::=> "arguments suitable for passing to make-socket")
-         (item "{param body}" ccldoc::=> "body to execute")))
-     (defsection "Description"
-       (para "executes body with var bound to the result of applying
-	  make-socket to make-socket-args. The socket gets closed on exit.")))))
+       "Returns a string describing the context where the error {param
+socket-error} happened. On Linux, this is the name of the system call
+which returned the error.")
+
+    (definition (:method close) "close (socket socket) code &key abort" nil
+       "Close {param socket}, releasing the operating system resources
+associated with it.  Normally, any pending buffered I/O will be
+finished up before closing, but if {code :abort} is {code t}, any
+pending I/O will be aborted.  Note that for listener and udp sockets,
+there is never any buffered I/O to clean up, so the value of
+{code :abort} is effectively ignored.")
+
+    (definition (:macro with-open-socket) "with-open-socket (var . make-socket-args) &body body" nil
+      "Executes {param body} with {param var} bound to the result of
+       applying {function make-socket} to {param
+       make-socket-args}. The socket gets closed on exit.")))

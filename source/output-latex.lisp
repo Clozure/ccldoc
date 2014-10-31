@@ -16,7 +16,6 @@
 \\setsansfont[Scale=MatchLowercase,Mapping=tex-text]{Eras Demi ITC}
 \\setmonofont[Scale=MatchLowercase]{Inconsolata}
 \\setmathfont(Digits){Times-Roman}
-
 \\usepackage{sectsty}
 \\chaptertitlefont{\\sf}
 \\chapterfont{\\sf}
@@ -26,7 +25,12 @@
   showspaces=false,
   showstringspaces=false,
   columns=flexible,
+  frame=single,
   language={}}
+
+\\def\\cf{\\tt\\frenchspacing}
+
+\\input{defun}
 
 % make this the last \usepackage
 \\usepackage[pdfborder={0 0 0}]{hyperref}
@@ -84,15 +88,30 @@
   (format stream "\\tableofcontents~%")
   (write-latex (clause-body clause) stream)
   (format stream "~&\\end{document}~%"))
-  
+
+(defmethod write-latex :before ((clause named-clause) stream)
+  (when (and (clause-name clause)
+	     (not (typep (ancestor-of-type clause 'named-clause) 'definition)))
+    (format stream "\\label{~a}~%" (clause-external-id clause))))
+	   
 (defmethod write-latex ((clause index-section) stream))
+
+(defmethod write-latex ((clause indexed-clause) stream)
+  (write-latex (clause-body clause) stream)
+  (format stream "\\index{~a} " (clause-body clause)))
+
 (defmethod write-latex ((clause glossary-section) stream))
-(defmethod write-latex ((clause glossentry) stream))
+
+(defmethod write-latex ((clause glossentry) stream)
+  (write-latex (clause-body clause) stream)
+  (format stream "\\newglossaryentry{~a}" (clause-term clause))
+  (format stream "{name={~a},description={~a}}" (clause-term clause)
+	  (clause-body clause)))
 
 (defmethod write-latex ((clause section) stream)
   (cond ((typep (ancestor-of-type clause 'named-clause) 'definition)
-	 ;; don't write section titles in defintions
-	 (write-latex (clause-body clause) stream))
+	 ;; don't write section titles in definitions
+	 nil)
 	((<= (section-level clause) 1)
 	 ;; heuristic: a top-level section clause is a chapter
 	 (format stream "~&\\chapter{")
@@ -101,11 +120,31 @@
 	((= (section-level clause) 2)
 	 (format stream "~&\\section{")
 	 (write-latex (clause-title clause) stream)
+	 (format stream "}~2%"))
+	((= (section-level clause) 3)
+	 (format stream "~&\\subsection{")
+	 (write-latex (clause-title clause) stream)
+	 (format stream "}~2%"))
+	((= (section-level clause) 4)
+	 (format stream "~&\\subsubsection{")
+	 (write-latex (clause-title clause) stream)
 	 (format stream "}~2%")))
   (write-latex (clause-body clause) stream))
 
-(defmethod write-latex ((clause code-block) stream))
-(defmethod write-latex ((clause block) stream))
+(defmethod write-latex ((clause code-block) stream)
+  (format stream "~&\\begin{lstlisting}~%")
+  ;; Gobble leading and trailing newlines, which take up extra space
+  ;; in the TeX output.
+  (let ((s (make-string-output-stream)))
+    (write-latex (clause-body clause) s)
+    (write-string (string-trim '(#\newline) (get-output-stream-string s))
+		  stream))
+  (format stream "~&\\end{lstlisting}~%"))
+
+(defmethod write-latex ((clause block) stream)
+  (format stream "~&\\begin{quotation}~%")
+  (write-latex (clause-body clause) stream)
+  (format stream "~&\\end{quotation}~2%"))
 
 (defmethod write-latex ((clause para) stream)
   ;; paragraphs in TeX are delimited by blank lines
@@ -114,11 +153,57 @@
   (format stream "~&~%"))
 
 (defmethod write-latex ((clause docerror) stream))
-(defmethod write-latex ((clause link) stream))
-(defmethod write-latex ((clause table) stream))
-(defmethod write-latex ((clause row) stream))
-(defmethod write-latex ((clause listing) stream))
-(defmethod write-latex ((clause indexed-clause) stream))
+
+(defmethod write-latex ((clause link) stream)
+  (format stream "\\href{~a}" (link-url clause))
+  (write-string "{" stream)
+  (write-latex (clause-body clause) stream)
+  (write-string "} " stream))
+
+(defmethod write-latex ((clause table) stream)
+  (format stream "~&\\begin{table}")
+  (format stream "~%\\centering")
+  (format stream "~&\\begin{tabular}")
+  (let* ((rows (clause-items clause))
+	 (ncol (length (clause-items (elt rows 0)))))
+    (write-string "{" stream)
+    (dotimes (i ncol)
+      (write-char #\l stream))
+    (format stream "}~%")
+    (dotimes (i (length rows))
+      (write-latex (aref rows i) stream))
+    (format stream "~&\\end{tabular}")
+    (format stream "~&\\caption{")
+    (write-latex (clause-title clause) stream)
+    (write-string "}" stream)
+    (format stream "~&\\end{table}~%")))
+
+(defmethod write-latex ((clause row) stream)
+  (let* ((items (clause-items clause))
+	 (nitems (length items))
+	 (last-index (1- nitems)))
+    (dotimes (i nitems)
+      (write-latex (aref items i) stream)
+      (if (< i last-index)
+	(write-string " & " stream)
+	(format stream " \\\\~%")))))
+
+
+(defmethod write-latex ((clause listing) stream)
+  (let ((environment (case (listing-type clause)
+		       (:bullet "itemize")
+		       (:number "enumerate")
+		       (:definition "description"))))
+    (when environment
+      (format stream "~&\\begin{~a}~%" environment))
+    (loop for item across (clause-items clause)
+	  do (progn
+	       (when (member (listing-type clause) '(:bullet :number))
+		 (write-string "\\item " stream))
+	       (write-latex item stream)))
+    (when environment
+      (format stream "~&\\end{~a}~2%" environment))))
+  
 
 (defmethod write-latex ((clause markup) stream)
   (let ((code (ecase (markup-type clause)
@@ -131,10 +216,58 @@
     (write-latex (clause-body clause) stream)
     (write-string "}" stream)))
 
-(defmethod write-latex ((clause item) stream))
-(defmethod write-latex ((clause term-item) stream))
-(defmethod write-latex ((clause xref) stream))
-(defmethod write-latex ((clause definition) stream))
+(defmethod write-latex ((clause item) stream)
+  (let ((body (clause-body clause)))
+    (when body
+      (write-latex body stream)
+      (fresh-line stream))))
+
+(defmethod write-latex ((clause term-item) stream)
+  (format stream "\\item[~a] " (clause-term clause))
+  (write-latex (clause-body clause) stream)
+  (fresh-line stream))
+
+(defmethod write-latex ((clause xref) stream)
+  (format stream "\\hyperref[~a]" (clause-external-id (xref-target clause)))
+  (write-string "{" stream)
+  (write-latex (or (clause-body clause)
+		   (xref-default-body clause)) stream)
+  (write-string "}" stream))
+
+(defmethod write-latex ((clause definition) stream)
+  (let ((kind (dspec-type-name (clause-name clause))))
+    ;; kludge: wrap hemlock variable signatures in hbox like we
+    ;; do for macros
+    (when (or (string= kind "Hemlock Variable")
+	      (string= kind "Hemlock Command")
+	      (string= kind "Toplevel Command")
+	      (string= kind "Lap Macro"))
+      (setq kind "Macro"))
+    (format stream "~&\\begin{defun}")
+    (format stream "[~a]~%" kind)
+    (flet ((escape-signature-test (char)
+	     (or (char= char #\#)
+		 (char= char #\%)
+		 (char= char #\$)
+		 (char= char #\_))))
+      (when (string= kind "Macro")
+	(write-string "\\hbox{" stream))
+      (write-string (escape-for-latex
+		     (string-trim '(#\newline #\space)
+				  (clause-text (definition-signature clause)))
+		     :test #'escape-signature-test)
+		    stream)
+      (when (string= kind "Macro")
+	(write-string "}" stream)))
+    (format stream "~2%")
+    (when (definition-summary clause)
+      (write-latex (definition-summary clause) stream)
+      (format stream "~&~%"))
+    (let ((s (make-string-output-stream)))
+      (write-latex (clause-body clause) s)
+      (write-string (string-trim '(#\newline) (get-output-stream-string s))
+		    stream))
+    (format stream "~&\\end{defun}~2%")))
 
 (defmethod write-latex ((clause cons) stream)
   (dolist (c clause)

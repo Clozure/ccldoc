@@ -528,25 +528,16 @@ Type :? for other options.
       The Cocoa runtime may make additional threads in certain
       special situations; these threads usually don't run lisp code,
       and rarely if ever run much of it.|)
+
   (defsection "Threads Dictionary"
-    (definition (:function all-processes) "all-processes => result" "Obtain a fresh list of all known Lisp
-	      threads."
-     (defsection "Values"
-       (listing :definition
-         (item "{param result}" ccldoc::=> "a list of all lisp processes (threads)
-		        known to {CCL}.")))
-     (defsection "Description"
-       (para #:|Returns a list of all lisp processes (threads) known
-	      to {CCL} as of
-	      the precise instant it's called. It's safe to traverse
-	      this list and to modify the cons cells that comprise that list
-	      (it's freshly consed.) Since other threads can create and kill
-	      threads at any time, there's generally no way to get an
-	      "accurate" list of all threads, and (generally) no
-	      sense in which such a list can be accurate.|))
-     (defsection "See Also" (clause (ref (definition :variable *current-process*)))))
+    (definition (:function all-processes) "all-processes" nil
+      "Returns a fresh list of all lisp processes (threads) known to
+       {CCL} as of the precise instant it's called.  Since other
+       threads can create and kill threads at any time, there's
+       no way to get a perfectly accurate list of all threads.")
+
     (definition (:function make-process)
-     "make-process name &key persistent priority class initargs stack-size vstack-size tstack-size initial-bindings use-standard-initial-bindings => process"
+     "make-process name &key persistent priority class initargs stack-size vstack-size tstack-size initial-bindings use-standard-initial-bindings"
      "Creates and returns a new process."
      (defsection "Arguments and Values"
        (listing :definition
@@ -614,7 +605,7 @@ Type :? for other options.
      (defsection "See Also"
        (clause (ref (definition :function process-preset)) ", " (ref (definition :function process-enable)) ", "
         (ref (definition :function process-run-function)))))
-    (definition (:function process-suspend) "process-suspend process => result" "Suspends a specified process."
+    (definition (:function process-suspend) "process-suspend process" "Suspends a specified process."
      (defsection "Arguments and Values"
        (listing :definition
          (item "{param process}" ccldoc::=> "a lisp process (thread).")
@@ -656,7 +647,7 @@ Type :? for other options.
 	      obvious inverse, so {code process-disable}
 	      is no longer
 	      defined.")))
-    (definition (:function process-resume) "process-resume process => result"
+    (definition (:function process-resume) "process-resume process"
      "Resumes a specified process which had previously
 	      been suspended by process-suspend."
      (defsection "Arguments and Values"
@@ -688,7 +679,7 @@ Type :? for other options.
         (ref (definition :function process-enable)) " now does something slightly
 	      different.
 	    ")))
-    (definition (:function process-suspend-count) "process-suspend-count process => result"
+    (definition (:function process-suspend-count) "process-suspend-count process"
      "Returns the number of currently-pending suspensions
 	      applicable to a given process."
      (defsection "Arguments and Values"
@@ -717,7 +708,7 @@ Type :? for other options.
 	      0."))
      (defsection "See Also"
        (clause (ref (definition :function process-suspend)) ", " (ref (definition :function process-resume)))))
-    (definition (:function process-preset) "process-preset process function {code &rest} args => result"
+    (definition (:function process-preset) "process-preset process function {code &rest} args"
      "Sets the initial function and arguments of a specified
 	      process."
      (defsection "Arguments and Values"
@@ -777,7 +768,7 @@ A process cannot meaningfully attempt to enable itself.")
        (para "It would be nice to have more discussion of what it means
 	      to synchronize with the process.")))
     (definition (:function process-run-function)
-     "process-run-function process-specifier function {code &rest} args => process"
+     "process-run-function process-specifier function {code &rest} args"
      "Creates a process, presets it, and enables it.
 	    "
      (defsection "Arguments and Values"
@@ -821,7 +812,7 @@ A process cannot meaningfully attempt to enable itself.")
      (defsection "See Also"
        (clause (ref (definition :function make-process)) ", " (ref (definition :function process-preset)) ", "
         (ref (definition :function process-enable)))))
-    (definition (:function process-interrupt) "process-interrupt process function {code &rest} args => result"
+    (definition (:function process-interrupt) "process-interrupt process function {code &rest} args"
      "Arranges for the target process to invoke a
 	      specified function at some point in the near future, and then
 	      return to what it was doing."
@@ -882,56 +873,41 @@ A process cannot meaningfully attempt to enable itself.")
 	      Darwin, to make it practical to asynchronously interrupt
 	      things which make heavy use of the Mach nanokernel.
 	    "))
-    (definition (:variable *current-process*) "*CURRENT-PROCESS*" "Bound in each process, to that process
-	      itself."
-     (defsection "Value Type" (para "A lisp process (thread)."))
-     (defsection "Initial Value"
-       (para "Bound separately in each process, to that process itself.
-	    "))
-     (defsection "Description"
-       (para "Used when lisp code needs to find out what process it is
-	      executing in.  Shouldn't be set by user code."))
-     (defsection "See Also" (clause (ref (definition :function all-processes)))))
-    (definition (:function process-reset) "process-reset process {code &optional} kill-option => result"
-     "Causes a specified process to cleanly exit from
-	      any ongoing computation."
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param process}" ccldoc::=> "a lisp process (thread).")
-         (item "{param kill-option}" ccldoc::=> "an internal argument, must be nil.")
-         (item "{param result}" ccldoc::=> "undefined.")))
-     (defsection "Description"
-       (para "Causes {param process} to cleanly exit
-	      from any ongoing computation and enter a state where it can be
-	      "
-        (ref (definition :function process-preset)) ". This
-	      is implemented by signaling a condition of type PROCESS-RESET;
-	      user-defined condition handlers should generally refrain from
-	      attempting to handle conditions of this type.")
-       "The {param kill-option} argument is for internal
-            use only and should not be specified by user code
 
-A process can meaningfully reset itself."
-       (para "There is in general no way to know precisely when
-	      {param process}
-	      has completed the act of resetting or killing itself; a process
-	      which has either entered the limbo of the reset state or exited
-	      has few ways of communicating either fact.
-	      "
-        (ref (definition :function process-enable)) #:|
-	      can reliably determine when a process has entered
-	      the "limbo of the reset state", but can't predict how long the
-	      clean exit from ongoing computation might take: that depends on
-	      the behavior of {function unwind-protect} cleanup
-	      forms, and of the OS scheduler.|)
-       (para "Resetting a process other than
-	      "
-        (ref (definition :variable *current-process*)) " involves the
-	      use of "
-        (ref (definition :function process-interrupt)) "."))
-     (defsection "See Also"
-       (clause (ref (definition :function process-kill)) ", " (ref (definition :function process-abort)))))
-    (definition (:function process-reset-and-enable) "process-reset-and-enable process => result"
+    (definition (:variable *current-process*) "*current-process*" nil
+       "Bound separately in each process, to that process itself.
+        It may be used when lisp code needs to find out what process
+	it is executing in.  It should not be set by user code.")
+
+    (definition (:function process-reset) "process-reset process &optional kill-option" nil
+     "This function causes {param process} to cleanly exit from any
+      ongoing computation and enter a state wehre it can be {function
+      process-preset}.
+
+      This is implemented by signaling a condition of type
+      PROCESS-RESET; user-defined condition handlers should generally
+      refrain from attempting to handle conditions of this type.
+
+      The {param kill-option} argument is for internal
+      use only and should not be specified by user code.
+
+      A process can meaningfully reset itself.
+
+      There is in general no way to know precisely when {param
+      process} has completed the act of resetting or killing itself; a
+      process which has either entered the limbo of the reset state or
+      exited has few ways of communicating either fact.
+
+      The function {function process-enable} can reliably determine
+      when a process has entered the limbo of the reset state, but
+      can't predict how long the clean exit from ongoing computation
+      might take: that depends on the behavior of {function
+      unwind-protect} cleanup forms, and of the OS scheduler.
+
+      Resetting a process other than {variable *current-process*}
+      involves the use of the function {function process-interrupt}.")
+
+    (definition (:function process-reset-and-enable) "process-reset-and-enable process"
      "Reset and enable the specified process, which
 	    may not be the current process."
      (defsection "Arguments and Values"
@@ -946,21 +922,13 @@ A process can meaningfully reset itself."
 	    "))
      (defsection "See Also"
        (clause (ref (definition :function process-reset)) ", " (ref (definition :function process-enable)))))
-    (definition (:function process-kill) "process-kill process => result"
-     "Causes a specified process to cleanly exit from any
-	      ongoing computation, and then exit."
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param process}" ccldoc::=> "a lisp process (thread).")
-         (item "{param result}" ccldoc::=> "undefined.")))
-     (defsection "Description"
-       (para "
-	      Causes {param process} to cleanly exit
-	      from any ongoing computation, and then exit.
-	    "))
-     (defsection "See Also"
-       (clause (ref (definition :function process-reset)) ", " (ref (definition :function process-abort)))))
-    (definition (:function process-abort) "process-abort process {code &optional} condition => NIL"
+
+    (definition (:function process-kill) "process-kill process"
+     "Causes {param process} to cleanly exit from any ongoing
+      computation, and then exit.  Note that {code unwind-protect}
+      cleanup forms will be run with interrupts disabled.")
+
+    (definition (:function process-abort) "process-abort process &optional condition"
      (clause "Causes a specified process to process an abort
 	      condition, as if it had invoked
 	      {function abort}.")
@@ -995,7 +963,7 @@ A process can meaningfully reset itself."
 	      values expressed in "ticks".  This value gives the number of
 	      ticks per second.|))
      (defsection "See Also" (clause (ref (definition :function process-wait-with-timeout)))))
-    (definition (:function process-whostate) "process-whostate process => whostate"
+    (definition (:function process-whostate) "process-whostate process"
      "Returns a string which describes the status of
 	      a specified process."
      (defsection "Description"
@@ -1038,7 +1006,7 @@ A process can meaningfully reset itself."
        (para "This is a holdover from the days of cooperative
 	      multitasking.  All modern general-purpose operating systems use
 	      preemptive multitasking.")))
-    (definition (:function process-wait) "process-wait whostate function {code &rest} args => result"
+    (definition (:function process-wait) "process-wait whostate function {code &rest} args"
      "Causes the current lisp process (thread) to wait for
 	      a given
 	      predicate to return true."
@@ -1077,7 +1045,7 @@ A process can meaningfully reset itself."
         (ref (definition :function process-input-wait)) ", " (ref (definition :function process-output-wait)) ", "
         (ref (definition :macro with-terminal-input)))))
     (definition (:function process-wait-with-timeout)
-     "process-wait-with-timeout whostate ticks function args => result" "Causes the current thread to wait for a given
+     "process-wait-with-timeout whostate ticks function args" "Causes the current thread to wait for a given
 	      predicate to return true, or for a timeout to expire."
      (defsection "Arguments and Values"
        (listing :definition
@@ -1121,7 +1089,7 @@ A process can meaningfully reset itself."
         (ref (definition :function make-read-write-lock)) ", " (ref (definition :function make-semaphore)) ", "
         (ref (definition :function process-input-wait)) ", " (ref (definition :function process-output-wait)) ", "
         (ref (definition :macro with-terminal-input)))))
-    (definition (:macro without-interrupts) "without-interrupts {code &body} body => result"
+    (definition (:macro without-interrupts) "without-interrupts &body body"
      "Evaluates its body in an environment in which
 	      process-interrupt requests are deferred."
      (defsection "Arguments and Values"
@@ -1145,7 +1113,7 @@ A process can meaningfully reset itself."
 	      structure (for which the current thread holds an appropriate lock)
 	      in some manner that's not reentrant."))
      (defsection "See Also" (clause (ref (definition :function process-interrupt)))))
-    (definition (:macro with-interrupts-enabled) "with-interrupts-enabled {code &body} body => result"
+    (definition (:macro with-interrupts-enabled) "with-interrupts-enabled {code &body} body"
      "Evaluates its body in an environment in which
 	      process-interrupt requests have immediate effect."
      (defsection "Arguments and Values"
@@ -1159,7 +1127,7 @@ A process can meaningfully reset itself."
         (ref (definition :function process-interrupt)) "
 	      requests have immediate effect.
 	    ")))
-    (definition (:function make-lock) "make-lock {code &optional} name => lock"
+    (definition (:function make-lock) "make-lock {code &optional} name"
      "Creates and returns a lock object, which can
 	      be used for synchronization between threads."
      (defsection "Arguments and Values"
@@ -1246,7 +1214,7 @@ A process can meaningfully reset itself."
         (ref (definition :function make-read-write-lock)) ", " (ref (definition :function make-semaphore)) ", "
         (ref (definition :function process-input-wait)) ", " (ref (definition :function process-output-wait)) ", "
         (ref (definition :macro with-terminal-input)))))
-    (definition (:function try-lock) "try-lock lock => result" "Obtains the given lock, but only if it is not
+    (definition (:function try-lock) "try-lock lock" "Obtains the given lock, but only if it is not
 	      necessary to wait for it."
      (defsection "Arguments and Values"
        (listing :definition
@@ -1270,7 +1238,7 @@ A process can meaningfully reset itself."
         (ref (definition :function make-read-write-lock)) ", " (ref (definition :function make-semaphore)) ", "
         (ref (definition :function process-input-wait)) ", " (ref (definition :function process-output-wait)) ", "
         (ref (definition :macro with-terminal-input)))))
-    (definition (:function make-read-write-lock) "make-read-write-lock => read-write-lock"
+    (definition (:function make-read-write-lock) "make-read-write-lock-write-lock"
      "Creates and returns a read-write lock, which can
 	      be used for synchronization between threads."
      (defsection "Arguments and Values"
@@ -1294,7 +1262,8 @@ A process can meaningfully reset itself."
        (para #:|There probably should be some way to
 	      atomically "promote" a reader, making it a writer without
 	      releasing the lock, which could otherwise cause delay.|)))
-    (definition (:macro with-read-lock) "with-read-lock (read-write-lock) {code &body} body => result"
+
+    (definition (:macro with-read-lock) "with-read-lock (read-write-lock) &body body"
      "Waits until a given lock is available for
 	      read-only access, then evaluates its body with the lock
 	      held."
@@ -1323,7 +1292,8 @@ A process can meaningfully reset itself."
         (ref (definition :function make-lock)) ", " (ref (definition :function make-semaphore)) ", "
         (ref (definition :function process-input-wait)) ", " (ref (definition :function process-output-wait)) ", "
         (ref (definition :macro with-terminal-input)))))
-    (definition (:macro with-write-lock) "with-write-lock (read-write-lock) {code &body} body"
+
+    (definition (:macro with-write-lock) "with-write-lock (read-write-lock) &body body"
      "Waits until the given lock is available for write
 	      access, then executes its body with the lock held."
      (defsection "Arguments and Values"
@@ -1353,7 +1323,8 @@ A process can meaningfully reset itself."
         (ref (definition :function make-lock)) ", " (ref (definition :function make-semaphore)) ", "
         (ref (definition :function process-input-wait)) ", " (ref (definition :function process-output-wait)) ", "
         (ref (definition :macro with-terminal-input)))))
-    (definition (:function make-semaphore) "make-semaphore => semaphore"
+
+    (definition (:function make-semaphore) "make-semaphore"
      "Creates and returns a semaphore, which can be used
 	      for synchronization between threads."
      (defsection "Arguments and Values"
@@ -1369,7 +1340,7 @@ A process can meaningfully reset itself."
         (ref (definition :function timed-wait-on-semaphore)) ", " (ref (definition :function make-lock)) ", "
         (ref (definition :function make-read-write-lock)) ", " (ref (definition :function process-input-wait)) ", "
         (ref (definition :function process-output-wait)) ", " (ref (definition :macro with-terminal-input)))))
-    (definition (:function signal-semaphore) "signal-semaphore semaphore => result"
+    (definition (:function signal-semaphore) "signal-semaphore semaphore"
      "Atomically increments the count of a given
 	      semaphore."
      (defsection "Arguments and Values"
@@ -1391,7 +1362,7 @@ A process can meaningfully reset itself."
 	      and acted on by {function signal-semaphore}, because
 	      it is not likely to be meaningful to a lisp program, and the
 	      most common cause of failure is a type error.")))
-    (definition (:function wait-on-semaphore) "wait-on-semaphore semaphore => result"
+    (definition (:function wait-on-semaphore) "wait-on-semaphore semaphore"
      "Waits until the given semaphore has a positive
 	      count which can be atomically decremented."
      (defsection "Arguments and Values"
@@ -1414,7 +1385,7 @@ A process can meaningfully reset itself."
 	      and acted on by {function wait-on-semaphore}, because
 	      it is not likely to be meaningful to a lisp program, and the
 	      most common cause of failure is a type error.")))
-    (definition (:function timed-wait-on-semaphore) "timed-wait-on-semaphore semaphore timeout => result"
+    (definition (:function timed-wait-on-semaphore) "timed-wait-on-semaphore semaphore timeout"
      "Waits until the given semaphore has a positive
 	      count which can be atomically decremented, or until a timeout
 	      expires."
@@ -1508,7 +1479,7 @@ A process can meaningfully reset itself."
 	      {function process-output-wait} does not.  This
 	      inconsistency should probably be corrected.
 	    ")))
-    (definition (:macro with-terminal-input) "with-terminal-input {code &body} body => result"
+    (definition (:macro with-terminal-input) "with-terminal-input {code &body} body"
      "Executes its body in an environment with exclusive
 	      read access to the terminal."
      (defsection "Arguments and Values"
@@ -1567,7 +1538,7 @@ A process can meaningfully reset itself."
         (ref (definition :variable *request-terminal-input-via-break*)) ", " (ref (definition :function make-lock))
         ", " (ref (definition :function make-read-write-lock)) ", " (ref (definition :function make-semaphore)) ", "
         (ref (definition :function process-input-wait)) ", " (ref (definition :function process-output-wait)))))
-    (definition (:function join-process) "join-process process {code &optional} default => values"
+    (definition (:function join-process) "join-process process {code &optional} default"
      "Waits for a specified process to complete and
 	returns the values that that process's initial function
 	returned."

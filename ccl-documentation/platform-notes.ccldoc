@@ -7,16 +7,7 @@
       Darwin/MacOS X and FreeBSD. There are some differences between
       the platforms, and these differences are sometimes exposed in
       the implementation.")
-    (defsection "Differences Between 32-bit and 64-bit implementations"
-      "Fixnums on 32-bit systems are 30 bits long, and are in the
-	  range -536870912 through 536870911.  Fixnums on 64-bit
-	  systems are 61 bits long, and are in the range
-	  -1152921504606846976 through 1152921504606846975. (see {section Tagging scheme})
-
-	    Since we have much larger fixnums on 64-bit systems,
-	    {variable internal-time-units-per-second} is 1000000
-	    on 64-bit systems but remains 1000 on 32-bit systems.  This
-	    enables much finer grained timing on 64-bit systems.")
+    
     (defsection "File-system case"
       #:|Darwin and MacOS X use HFS+ file systems by default;
 	    HFS+ file systems are usually case-insensitive. Most of
@@ -110,30 +101,7 @@
         "bundles/extensions" - are expected to be loaded into and
         unloaded from a running application, via a mechanism like the
         one used by {CCL}'s OPEN-SHARED-LIBRARY function.|)))
-  (defsection "Unix/Posix/Darwin Features"
-    "{CCL} has several convenience functions which allow you
-      to make Posix (portable Unix) calls without having to use the
-      foreign-function interface.  Each of these corresponds directly
-      to a single Posix function call, as it might be made in C.
-      There is no attempt to make these calls correspond to Lisp
-      idioms, such as {code setf}.  This means that their
-      behavior is simple and predictable.
 
-      For working with environment variables, there are
-      CCL::GETENV and CCL::SETENV.
-
-      For working with user and group IDs, there are
-      CCL::GETUID, CCL::SETUID, and CCL::SETGID.  To find the home
-      directory of an arbitrary user, as set in the user database
-      (/etc/passwd), there is CCL::GET-USER-HOME-DIR.
-
-For process IDs, there is CCL::GETPID.
-
-      For the {code system()} function, there is
-      CCL::OS-COMMAND.  Ordinarily, it is better - both more efficient
-      and more predictable - to use the features described in {chapter Running Other Programs as Subprocesses}.  However,
-      sometimes you may want to specifically ask the shell to invoke a
-      command for you.")
   (defsection "Cocoa Programming in {CCL}"
     "Cocoa is one of Apple's APIs for GUI programming; for most
       purposes, development is considerably faster with Cocoa than
@@ -343,143 +311,7 @@ For process IDs, there is CCL::GETPID.
                 This is the top page for all Apple developer documentation.
               ")))
   (defsection "Operating-System Dictionary"
-    (definition (:function getenv) "getenv name => value" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param name}" ccldoc::=> "a string which is the name of an existing
-		        environment variable;
-		        case-sensitive")
-         (item "{param value}" ccldoc::=> "if there is an environment variable named
-		        {param name}, its value, as a string; if there
-		        is not, NIL")))
-     (defsection "Description"
-       (para "
-	      Looks up the value of the environment variable named by
-	      {param name}, in the OS environment.
-	    ")))
-    (definition (:function setenv) "setenv name value => errno" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param name}" ccldoc::=> "a string which is the name of a new or existing
-		        environment variable;
-		        case-sensitive")
-         (item "{param value}" ccldoc::=> "a string, to be the new value of the
-		        environment variable
-		        named by {param name}")
-         (item "{param errno}" ccldoc::=> "zero if the function call completes successfully;
-		        otherwise, a platform-dependent integer which describes
-		        the problem")))
-     (defsection "Description"
-       (para "
-	      Sets the value of the environment variable named by
-	      {param name}, in the OS environment.  If there is
-	      no such environment
-	      variable, creates it.
-	    ")))
-    (definition (:function ccl::current-directory-name) "current-directory-name => path" nil
-     (defsection "Values"
-       (listing :definition
-         (item "{param path}" ccldoc::=> "a string, an absolute pathname in Posix format - with
-		        directory components separated by slashes")))
-     (defsection "Description"
-       (para "
-	      Looks up the current working directory of the {CCL} process;
-	      unless it has been changed, this is the directory {CCL} was
-	      started in.
-	    ")))
-    (definition (:function ccl::getuid) "getuid => uid" nil
-     (defsection "Values"
-       (listing :definition
-         (item "{param uid}" ccldoc::=> "a non-negative integer, identifying a specific user
-		        account as defined in the OS user database")))
-     (defsection "Description"
-       (para #:|
-	      Returns the ("real") user ID of the current user.
-	    |)))
-    (definition (:function ccl::setuid) "setuid uid => errno" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param uid}" ccldoc::=> "a non-negative integer, identifying a specific user
-		        account as defined in the OS user database")
-         (item "{param errno}" ccldoc::=> "zero if the function call completes successfully;
-		        otherwise, a platform-dependent integer which describes
-		        the problem")))
-     (defsection "Description"
-       (para #:|
-	      Attempts to change the current user ID (both "real" and
-	      "effective"); fails unless
-	      the {CCL} process has super-user privileges or the ID
-	      given is that of the current user.
-	    |)))
-    (definition (:function ccl::setgid) "setgid gid => errno" nil
-     (defsection "Arguments and Values"
-       (listing :definition
-         (item "{param gid}" ccldoc::=> "a non-negative integer, identifying a specific
-		        group as defined in the OS user database")
-         (item "{param errno}" ccldoc::=> "zero if the function call completes successfully;
-		        otherwise, a platform-dependent integer which describes
-		        the problem")))
-     (defsection "Description"
-       (para #:|
-	      Attempts to change the current group ID (both "real" and
-	      "effective"); fails unless
-	      the {CCL} process has super-user privileges or the ID
-	      given is that of a group to which the current user belongs.
-	    |)))
-    (definition (:function ccl::getpid) "getpid => pid" nil
-     (defsection "Values"
-       (listing :definition (item "{param pid}" ccldoc::=> "a non-negative integer, identifying an OS process")))
-     (defsection "Description"
-       (para "
-	      Returns the ID of the {CCL} OS process.
-	    ")))
-    (definition (:function ccl::get-user-home-dir) "get-user-home-dir uid => path" nil
-     (defsection "Values"
-       (listing :definition
-         (item "{param uid}" ccldoc::=> "a non-negative integer, identifying a specific user
-		        account as defined in the OS user database")
-         (item "{param path}" ccldoc::=> "a string, an absolute pathname in Posix format - with
-		        directory components separated by slashes; or NIL")))
-     (defsection "Description"
-       (para "
-	      Looks up and returns the defined home directory of the user
-	      identified by {param uid}.  This value comes from the
-	      OS user database, not from the {system $HOME}
-	      environment variable.  Returns NIL if there is no user with
-	      the ID {param uid}.
-	    ")))
-    (definition (:function ccl::os-command) "os-command command-line => exit-code" nil
-     (defsection "Values"
-       (listing :definition
-         (item "{param command-line}" ccldoc::=> "a string, obeying all the whitespace and
-	            escaping
-	            conventions required by the user's default system shell"))
-       (listing :definition
-         (item "{param exit-code}" ccldoc::=> "a non-negative integer, returned as the exit
-	            code of a subprocess; zero indicates success")))
-     (defsection "Description"
-       "
-	      Invokes the Posix function {code system()}, which
-	      invokes the user's default system shell (such as
-	      sh or tcsh) as a new process, and has that shell execute
-	      {param command-line}.
-	    
 
-
-	      If the shell was able to find the command specified in
-	      {param command-line}, then {param exit-code}
-	      is the exit code of that command.  If not, it is the exit
-	      code of the shell itself.
-	    ")
-     (defsection "Notes"
-       (para "
-	      By convention, an exit code of 0 indicates success.  There are
-	      also other conventions; unfortunately, they are OS-specific, and
-	      the portable macros to decode their meaning are implemented
-	      by the system headers as C preprocessor macros.  This means
-	      that there is no good, automated way to make them available
-	      to Lisp.
-	    ")))
     (definition (:macro objc:@class) "@class class-name" nil
      (defsection "Arguments and Values"
        (listing :definition
@@ -495,6 +327,7 @@ For process IDs, there is CCL::GETPID.
 	      find-class now works on ObjC classes.  It is described here
 	      only because some old code still uses it.
 	    "))
+
     (definition (:macro objc:@selector) "@selector string" nil
      (defsection "Arguments and Values"
        (listing :definition
@@ -504,6 +337,7 @@ For process IDs, there is CCL::GETPID.
        (para "Used to refer to an ObjC method selector (method name). Uses
 	      LOAD-TIME-VALUE to cache the result of a string -> selector
 	      lookup.")))
+
     (definition (:macro objc:defmethod)
      "objc:defmethod name-and-result-type ((receiver-arg-and-class) {code &rest} other-args) {code &body} body" nil
      (defsection "Arguments and Values"
@@ -535,6 +369,7 @@ For process IDs, there is CCL::GETPID.
           see the
           section "
         (ref (section "Using objc:defmethod") "Using {code objc:defmethod}") ".")))
+
     (definition (:macro objc:define-objc-method) "define-objc-method (selector class-name) {code &body} body" nil
      (defsection "Arguments and Values"
        (listing :definition
@@ -553,6 +388,7 @@ For process IDs, there is CCL::GETPID.
        (para "Defines an ObjC-callable method which implements the
 	        specified message selector for instances of the existing ObjC
 	        class class-name.")))
+
     (definition (:macro objc:define-objc-class-method)
      "define-objc-class-method (selector class-name) {code &body} body" nil
      (defsection "Arguments and Values" (para "As per DEFINE-OBJC-METHOD"))
@@ -576,6 +412,7 @@ For process IDs, there is CCL::GETPID.
 		        either a variable name (denoting a value of type :ID) or a list whose
 		        CAR is a variable name and whose CADR is the corresponding
 		        argument's foreign type specifier."))))
+
     (definition (:variable *alternate-line-terminator*) "CCL:*ALTERNATE-LINE-TERMINATOR*" nil
      (defsection "Description"
        #:|This variable is currently only used by the standard reader macro
@@ -597,6 +434,7 @@ For process IDs, there is CCL::GETPID.
 	        from an external convention to the external one) : it doesn't change
 	        what READ-CHAR or READ-LINE "see", and that may be necessary to
 	        handle some more complicated cases.|))
+
     (definition (:class ccl::ns-lisp-string) "CCL::NS-LISP-STRING" nil
      (defsection "Superclasses" (para "NS:NS-STRING"))
      (defsection "Initargs"

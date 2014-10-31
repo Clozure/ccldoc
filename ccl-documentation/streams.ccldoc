@@ -10,6 +10,7 @@
     {function (setf stream-external-format)} can be used to
     change the external format of open streams created with {function open} or {function make-socket}.
     ")
+
     (defsection "Additional keywords for OPEN and MAKE-SOCKET"
       (para "{function open} and
       {function make-socket} have each been extended to take
@@ -60,6 +61,7 @@
 	  of {code FUNDAMENTAL-STREAM} or
 	  {code CCL::BASIC-STREAM}(see {section Basic Versus Fundamental Streams}).  Defaults to
 	  {code T}.")))
+
     (defsection "Basic Versus Fundamental Streams"
       #:|Gray streams (see {section Creating Your Own Stream Classes with Gray Streams})
       all inherit from {code FUNDAMENTAL-STREAM} whereas
@@ -96,13 +98,8 @@
       before these changes were made.  That sounds good, until one
       realizes that the "equivalent" C loop can be about 10X faster
       still ...|)
+
     (defsection "Stream Timeouts and Deadlines"
-      nil
-      nil
-      nil
-      nil
-      nil
-      nil
       (para "A stream that is associated with a file descriptor has
         attributes and accessors:
         {function stream-input-timeout},
@@ -122,58 +119,33 @@
         {code COMMUNICATION-DEADLINE-EXPIRED} error is
         signalled.  A deadline takes precedence over any
         input/output timeouts that may be set."))
+
     (defsection "Open File Streams"
-      (para "Historically, {CCL} and MCL maintained a list of open
-        file streams in the value of
-        {code CCL:*OPEN-FILE-STREAMS*}.  This functionality
-        has been replaced with the thread-safe function:
-        {code CCL:OPEN-FILE-STREAMS} and its two helper
-        functions: {code CCL:NOTE-OPEN-FILE-STREAM} and
-        {code CCL:REMOVE-OPEN-FILE-STREAM}.  Maintaining
-        this list helps to ensure that streams get closed in an orderly
-        manner when the lisp exits.")
-      (definition (:function open-file-streams) "open-file-streams => stream-list"
-       "Returns the list of file streams that are currently open."
-       (defsection "Values"
-         (listing :definition
-           (item "{param stream-list}" ccldoc::=> "A list of open file streams.  This is a copy of
-		          an internal list so it may be destructively
-		          modified without ill effect.")))
-       (defsection "Description" (para "Returns a list of open file streams."))
-       (defsection "See Also"
-         (clause (ref (definition :function note-open-file-stream)) ", "
-          (ref (definition :function remove-open-file-stream)))))
-      (definition (:function note-open-file-stream) "note-open-file-stream file-stream"
-       (clause "Adds a file stream to the internal list of open
-	        file streams that is returned by
-	        {function note-open-file-stream}.")
-       (defsection "Arguments" (listing :definition (item "{param file-stream}" ccldoc::=> "A file stream.")))
-       (defsection "Description"
-         (para "Adds a file stream to the internal list of open
-	        file streams that is returned by
-	        {function open-file-streams}.  This function is
-	        thread-safe.  It will usually only be called from custom
-	        stream code when a file-stream is created."))
-       (defsection "See Also"
-         (clause (ref (definition :function open-file-streams)) ", "
-          (ref (definition :function remove-open-file-stream)))))
-      (definition (:function remove-open-file-stream) "remove-open-file-stream file-stream"
-       (clause "Removes file stream from the internal list of open
-	        file streams that is returned by
-	        {function open-file-streams}.")
-       (defsection "Arguments" (listing :definition (item "{param file-stream}" ccldoc::=> "A file stream.")))
-       (defsection "Description"
-         (para "Remove file stream from the internal list of open file
-	        streams that is returned by
-	        {function open-file-streams}.  This function is
-	        thread-safe.  It will usually only be called from custom
-	        stream code when a file-stream is closed."))
-       (defsection "See Also"
-         (clause (ref (definition :function open-file-streams)) ", "
-          (ref (definition :function note-open-file-stream)))))))
-  (defsection "Creating Your Own Stream Classes with Gray Streams"
-    (defsection "Overview"
-      "This sect1 is still being written and revised, because
+      (para "{CCL} maintains a list of open file streams.  This helps
+        to ensure that streams get closed in an orderly manner when
+        the lisp exits.  The following thread-safe functions manage
+        this list.")
+
+      (definition (:function open-file-streams) "open-file-streams" nil
+	"Returns a fresh list of file streams that are currently open.")
+
+      (definition (:function note-open-file-stream)
+	  "note-open-file-stream file-stream" nil
+	"Adds {param file-stream} to the internal list of open file
+         streams that is returned by {function open-file-streams}.
+         This function is thread-safe.  It will usually only be called
+         from custom stream code when a file-stream is created.")
+
+      (definition (:function remove-open-file-stream)
+	  "remove-open-file-stream file-stream" nil
+	"Removes {param file-stream} from the internal list of open file
+         streams that is returned by {function open-file-streams}.
+         This function is thread-safe.  It will usually only be called
+         from custom stream code when a file-stream is closed."))
+
+    (defsection "Creating Your Own Stream Classes with Gray Streams"
+      (defsection "Overview"
+	"This sect1 is still being written and revised, because
         it is woefully incomplete.  The dictionary section currently
         only lists a couple functions.  Caveat lector.
 
@@ -391,7 +363,12 @@
         ivector.) For these reasons, these functions are generally less
         safe and more flexible than their ANSI counterparts.|)
     (defsection "Gray Streams Dictionary"
+
       (definition (:generic-function stream-read-list) "stream-read-list stream list count" nil
+        (para "Should try to read up to count elements from stream
+	        into the list {param list}, returning the number of elements
+	        actually read (which may be less than count in case of
+	        a premature end-of-file.)")
        (defsection "Arguments and Values"
          (listing :definition
            (item "{param stream}" ccldoc::=> "a stream, presumably a fundamental-input-stream.")
@@ -400,12 +377,11 @@
 		          list.")
            (item "{param count}" ccldoc::=> "a non-negative integer. When a STREAM-READ-LIST method
 		          is called by READ-SEQUENCE, this argument is guaranteed not
-		          to be greater than the length of the list.")))
-       (defsection "Description"
-         (para "Should try to read up to count elements from stream into the
-	        list list, returning the number of elements actually read (which
-	        may be less than count in case of a premature end-of-file.)")))
+		          to be greater than the length of the list."))))
+
       (definition (:generic-function stream-write-list) "stream-write-list stream list count" nil
+       (para "Write the first {param count} elements of {param list} to
+	        {param stream}. The return value of this method is ignored.")
        (defsection "Arguments and Values"
          (listing :definition
            (item "{param stream}" ccldoc::=> "a stream, presumably a fundamental-output-stream.")
@@ -414,16 +390,21 @@
 		          list.")
            (item "{param count}" ccldoc::=> "a non-negative integer. When a STREAM-WRITE-LIST
 		          method is called by WRITE-SEQUENCE, this argument is
-		          guaranteed not to be greater than the length of the list.")))
-       (defsection "Description"
-         (para "should try to write the first count elements of list to
-	        stream. The return value of this method is ignored.")))
+		          guaranteed not to be greater than the length of the list."))))
+
       (definition (:generic-function stream-read-vector) "stream-read-vector stream vector start end" nil
+       (para "Read successive elements from stream into {param
+	        vector}, starting at element {param start} (inclusive)
+	        and continuing through element {param
+	        end} (exclusive.) Should return the index of the
+	        vector element beyond the last one stored into, which
+	        may be less than {param end} in case of premature
+	        end-of-file.")
        (defsection "Arguments and Values"
          (listing :definition
            (item "{param stream}" ccldoc::=> "a stream, presumably a fundamental-input-stream")
            (item "{param vector}" ccldoc::=> "a vector. When a STREAM-READ-VECTOR method is called
-		          by READ-SEQUENCE, this argument is guaranteed to be a simple
+		          by {code read-sequence}, this argument is guaranteed to be a simple
 		          one-dimensional array.")
            (item "{param start}" ccldoc::=> "a non-negative integer. When a STREAM-READ-VECTOR
 		          method is called by READ-SEQUENCE, this argument is
@@ -432,14 +413,13 @@
            (item "{param end}" ccldoc::=> "a non-negative integer. When a STREAM-READ-VECTOR
 		          method is called by READ-SEQUENCE, this argument is
 		          guaranteed to be no less than end and not greater than the
-		          length of vector.")))
-       (defsection "Description"
-         (para "should try to read successive elements from stream into
-	        vector, starting at element start (inclusive) and continuing
-	        through element end (exclusive.) Should return the index of the
-	        vector element beyond the last one stored into, which may be less
-	        than end in case of premature end-of-file.")))
+		          length of vector."))))
+
       (definition (:generic-function stream-write-vector) "stream-write-vector stream vector start end" nil
+       (para "should try to write successive elements of {param
+                vector} to {param stream}, starting at element {param
+                start} (inclusive) and continuing through element
+                {param end} (exclusive.)")
        (defsection "Arguments and Values"
          (listing :definition
            (item "{param stream}" ccldoc::=> "a stream, presumably a fundamental-output-stream")
@@ -453,11 +433,8 @@
            (item "{param end}" ccldoc::=> "a non-negative integer. When a STREAM-WRITE-VECTOR
 		          method is called by WRITE-SEQUENCE, this argument is
 		          guaranteed to be no less than end and not greater than the
-		          length of vector.")))
-       (defsection "Description"
-         (para "should try to write successive elements of vector to stream,
-	        starting at element start (inclusive) and continuing through
-	        element end (exclusive.)")))
+		          length of vector."))))
+
       (definition (:generic-function stream-device) "ccl::stream-device s direction"
        "Returns the OS file descriptor associated with a
 	        given lisp stream."
@@ -480,6 +457,7 @@
 	        {param direction} because the input and output
 	        file descriptors may be different; the most common case is when
 	        one of them has been redirected by the Unix shell.")))
+
       (definition (:generic-function stream-read-ivector) "stream-read-ivector stream ivector start-octet max-octets"
        nil
        (defsection "Description"
@@ -495,6 +473,7 @@
            (item "{param start-octet}" ccldoc::=> "A non-negative integer.")
            (item "{param max-octets}" ccldoc::=> "A non-negative integer. The return value may be less
 		          than the value of this parameter if EOF was encountered."))))
+
       (definition (:generic-function stream-write-ivector) "stream-write-ivector stream ivector start-octet max-octets"
        nil
        (defsection "Description"
@@ -540,26 +519,22 @@
 	        (num-octets (* 8 (- end start))))
        (stream-write-ivector stream vector start-octet num-octets)))
           |)))))
+
   (defsection "Lisp Standard Streams and OS Standard Streams"
-    "
-      In normal interactive usage, the input and output sides of the
-      bidirectional stream {code *terminal-io*} are hooked
-      up to the the operating system's standard input and standard
-      output.  The lisp streams {code *standard-input*},
-      {code *standard-output*}, and
-      {code *error-output*} are synonym streams for
-      {code *terminal-io*}.
-    
+    "In normal interactive usage, the input and output sides of the
+     bidirectional stream {code *terminal-io*} are hooked up to the
+     the operating system's standard input and standard output.  The
+     lisp streams {code *standard-input*}, {code *standard-output*},
+     and {code *error-output*} are synonym streams for {code
+     *terminal-io*}.
 
-
-      In batch mode, this arrangement is modified slightly.  The lisp
-      streams {code *standard-input*},
-      {code *standard-output*}, and
-      {code *standard-error*} correspond directly to the
-      operating system's standard input, standard output, and standard
-      error.  If the lisp can determine that it has access to an
-      operating system tty, then {code *terminal-io*} will
-      be hooked up to that.  Otherwise, the input and output streams
-      of {code *terminal-io*} will correspond to the
-      operating system's standard input and standard output.
-    "))
+     In batch mode, this arrangement is modified slightly.  The lisp
+     streams {code *standard-input*}, {code *standard-output*}, and
+     {code *standard-error*} correspond directly to the operating
+     system's standard input, standard output, and standard error.  If
+     the lisp can determine that it has access to an operating system
+     tty, then {code *terminal-io*} will be hooked up to that.
+     Otherwise, the input and output streams of {code *terminal-io*}
+     will correspond to the operating system's standard input and
+     standard output."))
+) ;chapter
