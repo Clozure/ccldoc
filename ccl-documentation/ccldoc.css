@@ -1,6 +1,10 @@
 tt, code, pre {
-    font-family: "Inconsolata", "DejaVu Sans Mono", "Courier";
+    font-family: "Inconsolata", "Menlo", "DejaVu Sans Mono", "Courier";
     font-size: medium;
+}
+
+pre {
+    font-size: 90%;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -54,8 +58,18 @@ h6 {
     float: right;
 }
 
+caption {
+    caption-side: bottom;
+    margin-top: 1em;
+}
+
 table {
-    font-size: small;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+tbody tr:nth-child(odd) {
+  background: #eee;
 }
 
 div.sidebar {

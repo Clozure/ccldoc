@@ -86,8 +86,7 @@
             example,")
            (code-block "(NS:INIT-NS-SIZE s w h)")
            (para "is roughly equivalent to")
-           (code-block "
-(SETF (NS:NS-SIZE-WIDTH s) w
+           (code-block "(SETF (NS:NS-SIZE-WIDTH s) w
       (NS:NS-SIZE-HEIGHT s) h)
           ")
            (para "but might be a little more efficient."))
@@ -96,8 +95,7 @@
             example")
            (code-block "(ns:ns-make-point x y)")
            (para "is functionally equivalent to")
-           (code-block "
-(LET ((P (MAKE-GCABLE-RECORD :NS-POINT)))
+           (code-block "(LET ((P (MAKE-GCABLE-RECORD :NS-POINT)))
   (NS:INIT-NS-POINT P X Y)
   p)
           "))
@@ -107,8 +105,7 @@
             of code with a variable bound to that instance.
 
 For example,"
-           (code-block "
-(ns:with-ns-range (r loc len)
+           (code-block "(ns:with-ns-range (r loc len)
   (format t \"~& range has location ~s, length ~s\" 
      (ns:ns-range-location r) (ns:ns-range-length r)))
 "))
@@ -304,8 +301,7 @@ For example,"
             MACPTR to be allocated.}
 
 Consider a code fragment like the following:"
-        (code-block "
-(defun get-next-event ()
+        (code-block "(defun get-next-event ()
   \"get the next event from a hypothetical window system\"
   (loop
      (let* ((event (#_get_next_window_system_event))) ; via an FF-CALL
@@ -334,8 +330,7 @@ Consider a code fragment like the following:"
 	      destructively modify a MACPTR (to change the value of the
 	      address it encapsulates.) The GET-NEXT-EVENT example could
 	      be re-written as:")
-        (code-block "
-(defun get-next-event ()
+        (code-block "(defun get-next-event ()
   (let* ((event (%int-to-ptr 0)))     ; create a MACPTR with address 0
     (loop
        (%setf-macptr event (#_get_next_window_system_event)) ; re-use it
@@ -363,8 +358,7 @@ Consider a code fragment like the following:"
           every iteration (the cost is small and there's no hidden GC
           cost), we could move the binding back inside the
           loop:"
-        (code-block "
-(defun get-next-event ()
+        (code-block "(defun get-next-event ()
   (loop
      (let* ((event (%null-ptr))) ; (%NULL-PTR) is shorthand for (%INT-TO-PTR 0)
        (declare (dynamic-extent event))
@@ -379,8 +373,7 @@ Consider a code fragment like the following:"
           all of the gory details. The following version of
           GET-NEXT-EVENT is semantically equivalent to the previous
           version, but hopefully a bit more concise:")
-        (code-block "
-(defun get-next-event ()
+        (code-block "(defun get-next-event ()
   (loop
      (with-macptrs ((event (#_get_next_window_system_event)))
        (unless (null-event-p event)
@@ -392,8 +385,7 @@ Consider a code fragment like the following:"
 	      (they can safely be freed at some point when it's known that
 	      they're no longer needed and it's known that they're no
 	      longer referenced.) A common idiom might be:")
-        (code-block "
-(with-macptrs (p (#_allocate_foreign_memory size))
+        (code-block "(with-macptrs (p (#_allocate_foreign_memory size))
   (unwind-protect
        (use-foreign-memory p)
     (#_deallocate_foreign_memory p)))
@@ -413,8 +405,7 @@ Consider a code fragment like the following:"
           stack-allocated MACPTRs which encapsulate the addresses of
           stack-allocated blocks of foreign memory. Using
           %STACK-BLOCK, the idiomatic code is:"
-        (code-block "
-(%stack-block ((p size))
+        (code-block "(%stack-block ((p size))
               (use-foreign-memory p))
         ")
         "which is a bit more efficient and a bit more concise
@@ -522,86 +513,79 @@ Consider a code fragment like the following:"
         "This function returns true if {param ptr} is a macptr that encapsulates the
         address 0.  It returns {code nil} if {param ptr} encapsulates some other address.")
       
-      (definition (:function "%setf-macptr") "%setf-macptr dest-ptr src-ptr" nil
-        "Causes {param dest-ptr} to encapsulate the same address that {param src-ptr}
-        does, then returns the updated {param dest-ptr}.")
+      (definition (:function %setf-macptr) "%setf-macptr dest-ptr src-ptr" nil
+        "Causes {param dest-ptr} to encapsulate the same address that
+        {param src-ptr} does, then returns the updated {param
+        dest-ptr}.")
 
-      (definition (:macro "%incf-ptr") "%incf-ptr ptr &optional (delta 1)" nil
-        "Destructively modifies {param ptr} by adding {param delta} to the address
-        it encapsulates. Returns {param ptr}.")
+      (definition (:macro %incf-ptr) "%incf-ptr ptr &optional (delta 1)" nil
+        "Destructively modifies {param ptr} by adding {param delta} to
+        the address it encapsulates. Returns {param ptr}.")
 
-      (definition (:macro "with-macptrs") "with-macptrs (var expr)* &body body" nil
-        "Executes {param body} in an environment in which each {param var} is bound
-        to a stack-allocated macptr which encapsulates the foreign address
-        yielded by the corresponding {param expr}. Returns whatever values body
-        returns.")
+      (definition (:macro with-macptrs) "with-macptrs (var expr)* &body body" nil
+        "Executes {param body} in an environment in which each {param
+        var} is bound to a stack-allocated macptr which encapsulates
+        the foreign address yielded by the corresponding {param
+        expr}. Returns whatever values body returns.")
 
-      (definition (:macro "%stack-block") "%stack-block (var expr)* &body body" nil
-        "Executes {param body} in an environment in which each {param var} is bound
-        to a stack-allocated macptr which encapsulates the address of a
-        stack-allocated region of size {param expr} bytes. Returns whatever
-        value(s) body returns.")
+      (definition (:macro %stack-block) "%stack-block (var expr)* &body body" nil
+        "Executes {param body} in an environment in which each {param
+        var} is bound to a stack-allocated macptr which encapsulates
+        the address of a stack-allocated region of size {param expr}
+        bytes. Returns whatever value(s) body returns.")
 
-      (definition (:function  "make-cstring") "make-cstring string" nil
-       "Allocates a block of foreign memory (via {code malloc}) of length
-{code (1+ (length {param string}))}.  It then copies {param string} to this
-block and appends a trailing nul byte.  Returns a macptr to the block.")
+      (definition (:function make-cstring) "make-cstring string" nil
+       "Allocates a block of foreign memory (via {code malloc}) of
+length {code (1+ (length {param string}))}.  It then copies {param
+string} to this block and appends a trailing nul byte.  Returns a
+macptr to the block.")
 
-      (defsection "with-cstrs [Macro]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "with-cstrs (var string)* &body body")
-          (item "Description" ccldoc::=> "Executes body in an environment in which each var is bound
-		        to a stack-allocated macptr which encapsulates the %address of a
-		        stack-allocated region of into which each string (and a trailing
-		        NUL byte) has been copied. Returns whatever value(s) body returns.")
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition
-             (item "{param var}" ccldoc::=> "A symbol (variable name)")
-             (item "{param string}" ccldoc::=> "An expression which should evaluate to a lisp string")))))
-      (defsection "with-encoded-cstrs [Macro]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "with-encoded-cstrs ENCODING-NAME (varI stringI)* &body body")
-          (item "Description" ccldoc::=> "Executes body in an environment in which each varI is
-		        bound to a macptr which encapsulates the %address of a
-		        stack-allocated region of into which each stringI (and a
-		        trailing NUL character) has been copied. Returns whatever
-		        value(s) body returns.
+      (definition (:macro with-encoded-cstrs) "with-encoded-cstrs encoding-name (var string)* &body body" nil
+	"Executes body in an environment in which each {param var} is bound
+        to a macptr which encapsulates the %address of a
+        stack-allocated region of into which each {param string} (and a
+        trailing NUL character) has been copied. Returns whatever
+        value(s) body returns.
 
-                ENCODING-NAME is a keyword constant that names a
-                character encoding. Each foreign string is encoded in the
-                named encoding. Each foreign string has dynamic
-                extent.
+        The {param encoding-name} should be a keyword that names a
+        character encoding. Each foreign string is encoded according
+        to the named encoding. Each foreign string has dynamic
+        extent.
 
-                WITH-ENCODED-CSTRS does not automatically prepend
-                byte-order marks to its output; the size of the terminating
-                #\\NUL character depends on the number of octets per code unit
-                in the encoding.
+        Note that {macro with-encoded-cstrs} does not automatically
+        prepend byte-order marks to the encoded strings;
+        additionally, the size of the terminating {code #\\NUL}
+        character depends on the number of octets per code unit in
+        the encoding.
 
-The expression"
-           (code-block "(ccl:with-cstrs ((x \"x\")) (#_puts x))")
- (para "is functionally equivalent to")
-           (code-block "(ccl:with-encoded-cstrs :iso-8859-1 ((x \"x\")) (#_puts x))"))
-          (item "Arguments" ccldoc::=> (para " ")
-           (listing :definition
-             (item "{param varI}" ccldoc::=> "A symbol (variable name)")
-             (item "{param stringI}" ccldoc::=> "An expression which should evaluate to a lisp string")))))
-      (defsection "%get-cstring [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%get-cstring ptr")
-          (item "Description" ccldoc::=> "Interprets ptr as a pointer to a (NUL -terminated) C string;
-		        returns an equivalent lisp string.")
-          (item "Arguments" ccldoc::=> (para) (listing :definition (item "{param ptr}" ccldoc::=> "A MACPTR")))))
-      (defsection "%str-from-ptr [Function]"
-        (listing :definition
-          (item "Syntax" ccldoc::=> "%str-from-ptr ptr length")
-          (item "Description" ccldoc::=> "Returns a lisp string of length {param length},
-		        whose contents are initialized from the bytes at{param  ptr.}")
-          (item "Arguments" ccldoc::=>
-           (listing :definition
-             (item "{param ptr}" ccldoc::=> "A
-		                MACPTR")
-             (item "{param length}" ccldoc::=> "a
-		                non-negative fixnum")))))))
+        The expression "
+	(code-block "(ccl:with-cstrs ((x \"x\")) (#_puts x))")
+	"is functionally equivalent to "
+	(code-block "(ccl:with-encoded-cstrs :iso-8859-1 ((x \"x\")) (#_puts x))"))
+
+      (definition (:macro with-cstrs) "with-cstrs (var string)* &body body" nil
+	"Executes {param body} in an environment in which each {param var}
+         is bound to a macptr which encapsulates the address of a
+         stack-allocated region of memory into which each {param string} (and
+         a trailing NUL character) has been copied. Returns whatever
+         values body returns.
+
+         This macro is hard-coded to use the {code :iso-8859-1} encoding.  The macro
+         {macro with-encoded-cstrs} allows you to specify the encoding.")
+
+
+      (definition (:function %get-cstring) "%get-cstring ptr" nil
+          "This function interprets {param ptr} as a pointer to a (null-terminated) C string,
+           and returns an equivalent lisp string.")
+
+      (definition (:function %str-from-ptr) "%str-from-ptr ptr length" nil
+          "Returns a lisp string of length {param length},
+          whose contents are initialized from the bytes at {param ptr.}")
+
+      (definition (:function get-encoded-string) "get-encoded-string encoding-name ptr len" nil
+	"Creates and returns a lisp string from {param len} octets pointed to by {param ptr}
+          decoded according to {param encoding-name}.")))
+
   (defsection "The Interface Database"
     (defsection "Overview"
       "{CCL} uses a set of database files which contain

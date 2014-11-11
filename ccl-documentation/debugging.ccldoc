@@ -689,6 +689,56 @@ WATCH-LIST
 > Type :? for other options.
 "))))
 
+(defsection "Memory"
+  (definition (:function heap-utilization) "heap-utilization &key (stream *debug-io*) (gc-first t) area unit (sort :size) classes start threshold)" nil
+
+    "This function walks the lisp heap, collects information about the
+objects stored on the heap, and prints a report of the results to the
+stream speficied by the keyword argument {code :stream}. It shows the
+number of objects of each type, the sum of their logical sizes (the
+size of the data part of the object) and the sum of their physical
+sizes (the total size as computed by {function object-direct-size}).
+
+If {code :gc-first} is true (the default), {function heap-utilization}
+does a full gc before scanning the heap.
+
+If {code :classes} is true, objects are classified by class rather
+than just basic type.
+
+The keyword argument {code :area} can be used to restrict the walk to
+one memory area or a list of areas. Some possible values
+are {code :dynamic}, {code :static}, {code :managed-static}, and
+{code :readonly}. By default, all areas (including stacks) are examined.
+
+The keword argument {code :sort} can be one of {code :count},
+{code :logical-size}, or {code :physical-size} to sort output by count
+or size.
+
+By default, sizes are shown in bytes.  The keyword argument
+{code :unit} can be {code :kb}, {code :mb}, or {code :gb}
+to show sizes in those units.
+
+If {code :start} is non-nil, it should be an object returned by
+{function get-allocation-sentinel}; only objects at higher address are
+scanned (roughly, only objects allocated after it).
+
+If threshold is non-nil, it should be a number between 0 and 1. All
+types whose share of the heap is less than threshold will be lumped
+together in an “All Others” line rather than being listed
+individually.")
+
+(definition (:function object-direct-size) "object-direct-size thing" nil
+  "This function returns the size of {param thing} in bytes, including
+any headers and alignment overhead.  It does not descend into an object's
+components."))
+
+(definition (:variable *disassemble-verbose*) "*disassemble-verbose*" nil
+  "When true, the output of {code disassemble} may include
+  platform-dependent additional information.  For instance, on the x86
+  ports, the output will include the x86 opcode bytes.
+
+  The default value is {code nil}.")
+
 ) ;end chapter
 
   

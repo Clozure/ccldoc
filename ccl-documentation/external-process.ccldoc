@@ -109,7 +109,7 @@
 		    value are case sensitive strings. See "
           (ref (definition :function setenv)) ".
 		  ")
-         (item "{param >silently-ignore-catastrophic-failures}" ccldoc::=> "
+         (item "{param silently-ignore-catastrophic-failures}" ccldoc::=> "
 		    If NIL, signal an error if run-program is unable
 		    to start the program. If non-NIL, treat failure to
 		    start the same as failure from the program itself,
