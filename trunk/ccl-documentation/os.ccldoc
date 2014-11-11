@@ -1,19 +1,17 @@
 ;;; -*- Mode: Lisp; Package: CCL; Coding: utf-8; -*-
 
 (chapter "Operating System Interface"
-  (defsection "Environment Variables"
-    (definition (:function getenv) "getenv name" nil
-      "This function looks up the value of the environment variable
-      {param name} (a string) and returns its value as a string.  If
-      there is no such envionment variable, then {code nil} is
-      returned.")
+  (definition (:function getenv) "getenv name" nil
+    "This function looks up the value of the environment variable
+     denoted by the string {param name} and returns its value as a
+     string.  If there is no such envionment variable, then {code nil}
+     is returned.")
 
-    (definition (:function setenv) "setenv name value" nil
-      "This function sets the operating system environment variable
-       denoted by the string {param name} to the string {param value}.
-       If the environment variable is successfully set, 0 is returned.
-       Otherwise, a platform-specific integer error code is
-       returned."))
+  (definition (:function setenv) "setenv name value" nil
+    "This function sets the operating system environment variable
+     denoted by the string {param name} to the string {param value}.
+     If the environment variable is successfully set, 0 is returned.
+     Otherwise, a platform-specific integer error code is returned.")
 
   (definition (:function wait-for-signal) "wait-for-signal sig duration" nil
     "Wait for the signal with signal number {param sig} to be received,
@@ -40,7 +38,7 @@
      called if an error occurs when preparing to quit.  The
      error-handler function should exit the lisp.")
 
-) ;chapter
+  ) ;chapter
 
 
 

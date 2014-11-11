@@ -1,14 +1,11 @@
 (in-package :ccldoc)
 
-(defvar *chapter-number*)
-
 (defun output-html (doc filename &key external-format (if-exists :supersede))
   (with-open-file (s filename :direction :output :if-exists if-exists
 		     :external-format external-format)
     (format s "<!DOCTYPE html>~%")
     (format s "<html>~%")
-    (let ((*chapter-number* 0))
-      (write-html doc s))
+    (write-html doc s)
     (format s "</html>~%")
     (truename s)))
 
@@ -28,6 +25,13 @@
       (when (plusp (1- depth))
 	(write-html-toc section stream (1- depth))))
     (format stream "</ul>~%")))
+
+(defun clause-chapter (clause)
+  (loop
+    (setq clause (clause-parent clause))
+    (when (or (null clause)
+	      (= (section-level clause) 1))
+      (return clause))))
 
 (defmethod write-html ((clause document) stream)
   (write-string "<head>" stream)
@@ -91,8 +95,6 @@
 		 (4 :h5)
 		 (otherwise :h6))))
       (format stream "<~a>" tag)
-      (when (<= (section-level clause) 1)
-	(format stream "~d. " (incf *chapter-number*)))
       (write-html (clause-title clause) stream)
       (format stream "</~a>~%" tag)
       (format stream "<div class=\"section\">~%")
@@ -120,9 +122,9 @@
   (fresh-line stream))
 
 (defmethod write-html ((clause docerror) stream)
-  (write-string "<span color=#f00>" stream)
+  (write-string "<span style=\"background-color: red\">" stream)
   (write-string (clause-text clause) stream)
-  (write-string "</span>")
+  (write-string "</span>" stream)
   (fresh-line stream))
 
 (defmethod write-html ((clause link) stream)
@@ -253,7 +255,6 @@
 (defmethod write-html ((clause null) stream)
   (declare (ignore stream))
   (warn "null clause"))
-
 
 (defmethod write-html :before ((clause named-clause) stream)
   (when (clause-name clause)

@@ -19,7 +19,7 @@
 \\usepackage{sectsty}
 \\chaptertitlefont{\\sf}
 \\chapterfont{\\sf}
-
+\\usepackage{longtable}
 \\usepackage{listings}
 \\lstset{basicstyle=\\small\\ttfamily,
   showspaces=false,
@@ -161,9 +161,8 @@
   (write-string "} " stream))
 
 (defmethod write-latex ((clause table) stream)
-  (format stream "~&\\begin{table}")
-  (format stream "~%\\centering")
-  (format stream "~&\\begin{tabular}")
+  (format stream "~&\\begin{center}")
+  (format stream "~&\\begin{longtable}")
   (let* ((rows (clause-items clause))
 	 (ncol (length (clause-items (elt rows 0)))))
     (write-string "{" stream)
@@ -172,11 +171,11 @@
     (format stream "}~%")
     (dotimes (i (length rows))
       (write-latex (aref rows i) stream))
-    (format stream "~&\\end{tabular}")
     (format stream "~&\\caption{")
     (write-latex (clause-title clause) stream)
     (write-string "}" stream)
-    (format stream "~&\\end{table}~%")))
+    (format stream "~&\\end{longtable}")
+    (format stream "~&\\end{center}~%")))
 
 (defmethod write-latex ((clause row) stream)
   (let* ((items (clause-items clause))
