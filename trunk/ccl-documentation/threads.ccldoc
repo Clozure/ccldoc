@@ -923,7 +923,7 @@ A process cannot meaningfully attempt to enable itself.")
      (defsection "See Also"
        (clause (ref (definition :function process-reset)) ", " (ref (definition :function process-enable)))))
 
-    (definition (:function process-kill) "process-kill process"
+    (definition (:function process-kill) "process-kill process" nil
      "Causes {param process} to cleanly exit from any ongoing
       computation, and then exit.  Note that {code unwind-protect}
       cleanup forms will be run with interrupts disabled.")

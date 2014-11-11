@@ -26,6 +26,11 @@
 	(write-html-toc section stream (1- depth))))
     (format stream "</ul>~%")))
 
+(defun write-html-sidebar (document stream)
+  (format stream "<div class=\"sidebar\">~%")
+  (write-html-toc document stream)
+  (format stream "</div>~%"))
+
 (defun clause-chapter (clause)
   (loop
     (setq clause (clause-parent clause))
@@ -254,7 +259,7 @@
 
 (defmethod write-html ((clause null) stream)
   (declare (ignore stream))
-  (warn "null clause"))
+  (cerror "return nil" "null clause"))
 
 (defmethod write-html :before ((clause named-clause) stream)
   (when (clause-name clause)

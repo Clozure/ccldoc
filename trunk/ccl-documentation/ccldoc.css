@@ -74,18 +74,17 @@ tbody tr:nth-child(odd) {
 
 div.sidebar {
     float: left;
-    margin-right: 0;
+    position: fixed;
     width: 230px;
-    top: auto;
     font-size: small;
-    border-radius: 5px;
-    background-color: #eee;
-    padding: 10px;
-    margin: 0;
+}
+
+div.sidebar > ul {
+    padding: 0;
 }
 
 div.body {
-    padding: 1em;
+    margin-left: 250px;
 }
 
 pre.source-code {
