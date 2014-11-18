@@ -1,6 +1,7 @@
 (in-package :ccldoc)
 
-(defun output-html (doc filename &key external-format (if-exists :supersede))
+(defun output-html (doc filename &key external-format (if-exists :supersede)
+				   style)
   (with-open-file (s filename :direction :output :if-exists if-exists
 		     :external-format external-format)
     (format s "<!DOCTYPE html>~%")

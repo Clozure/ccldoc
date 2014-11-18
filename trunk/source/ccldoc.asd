@@ -26,4 +26,5 @@
 		 (:file "output-docbook")
 		 (:file "output-tracwiki")
 		 (:file "output-html")
+		 (:file "output-latex")
 		 (:file "output-ccldoc")))

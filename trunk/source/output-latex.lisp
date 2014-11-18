@@ -94,13 +94,15 @@
 	     (not (typep (ancestor-of-type clause 'named-clause) 'definition)))
     (format stream "\\label{~a}~%" (clause-external-id clause))))
 	   
-(defmethod write-latex ((clause index-section) stream))
+(defmethod write-latex ((clause index-section) stream)
+  (declare (ignore stream)))
 
 (defmethod write-latex ((clause indexed-clause) stream)
   (write-latex (clause-body clause) stream)
   (format stream "\\index{~a} " (clause-body clause)))
 
-(defmethod write-latex ((clause glossary-section) stream))
+(defmethod write-latex ((clause glossary-section) stream)
+  (declare (ignore stream)))
 
 (defmethod write-latex ((clause glossentry) stream)
   (write-latex (clause-body clause) stream)
@@ -152,7 +154,8 @@
   (write-latex (clause-body clause) stream)
   (format stream "~&~%"))
 
-(defmethod write-latex ((clause docerror) stream))
+(defmethod write-latex ((clause docerror) stream)
+  (declare (ignore stream)))
 
 (defmethod write-latex ((clause link) stream)
   (format stream "\\href{~a}" (link-url clause))
