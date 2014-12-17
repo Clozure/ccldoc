@@ -1,11 +1,20 @@
 (in-package :ccldoc)
 
 (defun output-html (doc filename &key external-format (if-exists :supersede)
-				   style)
+				   stylesheet)
   (with-open-file (s filename :direction :output :if-exists if-exists
 		     :external-format external-format)
     (format s "<!DOCTYPE html>~%")
     (format s "<html>~%")
+    (format s "<head>~%")
+    (format s "<meta charset=\"utf-8\">~%")
+    (when stylesheet
+      (format s "<link rel=\"stylesheet\" type=\"text/css\" href=\"~a\" />~%"
+	      stylesheet))
+    (format s "<title>~%")
+    (write-html (clause-title doc) s)
+    (format s "</title>~%")
+    (format s "</head>~%")
     (write-html doc s)
     (format s "</html>~%")
     (truename s)))
@@ -40,15 +49,6 @@
       (return clause))))
 
 (defmethod write-html ((clause document) stream)
-  (write-string "<head>" stream)
-  (terpri stream)
-  (format stream "<meta charset=\"utf-8\">~%")
-  (format stream "<link rel=\"stylesheet\" type=\"text/css\" href=\"~a\" />"
-	  "ccl.css")
-  (write-string "<title>" stream)
-  (write-html (clause-title clause) stream)
-  (format stream "</title>~%")
-  (write-string "</head>" stream)
   (format stream "<body>~%")
   ;; (write-string "<h1>" stream)
   ;; (write-html (clause-title clause) stream)
