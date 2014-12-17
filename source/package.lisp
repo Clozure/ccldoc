@@ -33,6 +33,7 @@
    #:output-docbook
    #:output-tracwiki
    #:output-ccldoc
+   #:output-html
    #:def-expander
    #:def-definition-type)
   ;;; DOM

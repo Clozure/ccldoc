@@ -180,7 +180,6 @@
 (def-operator code-block (&rest subforms)
   (subforms-to-body (make-instance 'code-block) subforms))
 
-(SETQ *DEBUG-N* (cons 0 0))
 ;; Documentation for a definition.
 (def-operator definition ((type name)
                         signature
