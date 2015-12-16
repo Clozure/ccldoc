@@ -6,7 +6,7 @@ The documentation for Clozure CL is written in CCLDoc.
 
 To use CCLDoc to format the CCL documentation, follow these steps:
 
-1. Install CCL.  See http:/ccl.clozure.com/download.html
+1. Install CCL.  See http://ccl.clozure.com/download.html
 2. Install Quicklisp.  See http://www.quicklisp.org
 3. Check out the CCLDoc sources into ~/quicklisp/local-projects
 
