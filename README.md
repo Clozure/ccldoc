@@ -18,3 +18,5 @@ Now, start CCL, and do the following:
     (ccldoc::output-html *d* "/tmp/ccl.html" :stylesheet "ccl.css")
 
 You can then view the generated ccl.html file in your browser. The generated HTML expects to use a style file named ccl.css in the same directory.
+
+There is also a not-quite-complete LaTeX converter. To use it, do `(output-latex *d* "ccl.tex")` and then process the ccl.tex file with xelatex to produce a PDF file. The version of xelatex that comes with MacTeX 2014 works.
