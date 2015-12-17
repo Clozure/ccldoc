@@ -1,11 +1,13 @@
+;;;   -*- Lisp -*-
+;;;
 ;;;   Copyright (C) 2014 Clozure Associates
-;;;   This file is part of Clozure CL.  
+;;;   This file is part of Clozure CL.
 ;;;
 ;;;   Clozure CL is licensed under the terms of the Lisp Lesser GNU Public
 ;;;   License , known as the LLGPL and distributed with Clozure CL as the
 ;;;   file "LICENSE".  The LLGPL consists of a preamble and the LGPL,
 ;;;   which is distributed with Clozure CL as the file "LGPL".  Where these
-;;;   conflict, the preamble takes precedence.  
+;;;   conflict, the preamble takes precedence.
 ;;;
 ;;;   Clozure CL is referenced in the preamble as the "LIBRARY."
 ;;;
@@ -73,26 +75,26 @@
     has additional internal structure as described in {section String Syntax}. Finally, for
     convenience, an uninterned symbol is treated the same as a string, providing an alternate
     syntax (namely {code #:| ... |}) for entering text with many double-quotes.
-    
+
     {CCLDOC} operators are symbols.  Their input package is ignored and they are converted to keywords
     during processing (so they can be entered with or without an initial colon, as you prefer).  There
     is a set of predefined operators, documented here.  You can define additional operators using
     {function def-expander}.
     "
-    
+
     (:defsection "Basic Operators"
-      
+
       (:definition (:ccldoc :include-file) "(:include-file filename &key in-package external-format)"
         ""
         "The file {param filename} should consist of any number of lisp forms followed by
         {CCLDOC} forms.  The lisp forms are processed as if by {code LOAD} until the first {CCLDOC} form
         is encountered, after which all the remaining forms must be {CCLDOC} forms.  The {CCLDOC} forms are
         included in the document replacing the {code include-file} form itself.
-        
+
         The {param in-package} parameter can be used to specify the package used to load the file,
         and is entirely equivalent to placing an {code in-package} form at the start of the included file.
         {param external-format} specifies the character encoding of the file")
-      
+
       ;; TODO: document that can also do (title &key package) -- package is only used to format the
       ;; default text for ref's.
       (:definition (:ccldoc :defsection) "(:defsection title &rest subforms)"
@@ -102,35 +104,35 @@
         case it defines a subsection; and finally it can occur directly within the body of a
         {ccldoc definition}.  Sections can be referred to using the title, and, if necessary to disambiguate,
         the name of the containing section or definition -- see {ccldoc ref}.")
-      
+
       (:definition (:ccldoc :index-section) "(:index-section title)"
         ""
         "Placed at the top-level of the document to specify the title and location of the index")
-      
+
       (:definition (:ccldoc :glossary-section) "(:glossary-section title &rest glossentries)"
         ""
         "Placed at the top-level of the document to specify the title and location of the glossary.
         It may contain {ccldoc glossentry} definitions, although note that {ccldoc glossentry} definitions
         can actually occur anywhere in the document and will be placed in the glossary and sorted automatically")
-      
+
       (:definition (:ccldoc :block) "(:block title &rest subforms)"
         ""
         "Defines a block of text set off (indented) from the main text.  The {param title} can
         be {code NIL} to create an anonymous block.  Note however that even when titled, a block
         cannot be referred to by name from elsewhere in a document.")
-      
+
       (:definition (:ccldoc :code-block) "(:code-block &rest subforms)"
         ""
         "A block suitable for listing of code.  A fixed width font will be used to display the content,
         and whitespace and linebreaks will be shown verbatim.  Note however that markup {emphasis is}
         allowed within code blocks.")
-      
+
       (:definition (:ccldoc :table) "(:table title head-row &rest rows)"
         ""
         "Defines a table. Tables have a sequence of {ccldoc row} clauses, the first of which will
         be formatted specially as the head row.  Tables can be referred to using the {param title},
         and if necessary to disambiguate, the name of the containing section -- see {ccldoc ref}.")
-      
+
       (:definition (:ccldoc :glossentry) "(:glossentry term &rest subforms)"
         ""
         "A glossary definition.  {param term} is the term being defined, and the remaining
@@ -138,18 +140,18 @@
         source document, but it doesn't get displayed where it appears - all the {code glossentry}
         forms get collected into the {ccldoc glossary-section}.  Glossary entries can be referred
         to from elsewhere in the document using the {param term} -- see {ccldoc ref}.")
-      
+
       (:definition (:ccldoc :definition) "(:definition (type name) signature summary &rest subforms)"
         ""
         "A definition block - unit of reference documentation describing a single global lisp name.
-        
+
         {param type} is a symbol specifing the type of the definition, establishing a namespace
         in which {param name} is interpreted.  (As usual, the input package of the {param type} symbol is
         ignored and the symbol is converted to a keyword during processing).  The {param name} can
         be any lisp object.  Definitions can be referred to from elsewhere in the document using their
         {param type} and {param name} -- see {ccldoc ref}. {param name}s of the same
         {param type} are compared using {code EQUALP}.
-        
+
         {param signature} is the syntactic synopsis of the definition.
         "
         (block "Note"
@@ -158,20 +160,20 @@
           For now it might be best for document consistency to simply avoid markup in the signature")
         "
         {param summary} is a concise one line summary of the functionality being defined.
-        
+
         The {param subforms} provide a more detailed description.
-        
+
         The following {param type} values are supported by default.  Additional types can be defined via
         {macro def-definition-type}.
-        
+
         {dspec-types}
         ")
-      
+
       (:definition (:ccldoc :row) "(:row &rest items)"
         ""
         "For use within {ccldoc table} only, defines a single row in the table as a sequence of {ccldoc item}
         expresssions")
-      
+
       (:definition (:ccldoc :listing) "(:listing type &rest items)"
         ""
         "A listing of items specified by the {param items} forms.  {param type} determines how the list
@@ -183,11 +185,11 @@
           (:item "{code :definition}" => "A list in which each item consists of a term and an associated description.
                  See {ccldoc item} for the  syntax of definition list items")
           (:item "{code :column}" => "A simple undecorated column, typically of single words or phrases")))
-      
+
       (:definition (:ccldoc :para) "(:para &rest subforms)"
         ""
         "A paragraph.")
-      
+
       (:definition (:ccldoc :item) "(:item &rest subforms)"
         ""
         "A single item in a {ccldoc listing} or {ccldoc row} expression.  It cannot be used in any other context.
@@ -197,26 +199,26 @@
         {code (item \"An \" (emphasis \"important\") \" item\" => \"An item which is very important\")}
 
         As usual, the input package of {code =>} is ignored, so it can be entered with or without the colon.")
-      
+
       (:definition (:ccldoc :index) "(:index &rest subforms)"
         ""
         "Request an index entry.  The {param subforms} are displayed in place, but in addition, the phrase is
         added to the document index with a link to this point.")
-      
+
       (:definition (:ccldoc :clause) "(:clause &rest subforms)"
         ""
         "Much like the lisp {code PROGN} operator,  makes a single expressions from a sequence of them.")
-      
+
       (:definition (:ccldoc :link) "(:link url &rest subforms)"
         ""
         "Makes the text specified by {param subforms} into a link to the url {param url}.  If no {param subforms}
         is specified, the {param url} becomes the text.")
-      
+
       (:definition (:ccldoc :quote) "(:quote string)"
         ""
         "Specifies that {param string} is to be used literally, without being interpreted as described in {section String Syntax}.")
-      
-      
+
+
       (:definition (:ccldoc :markup) "(:markup type &rest subforms)"
         ""
         "Requests that markup as specified by {param type} should be applied to {param subforms}.  The {param type} is named
@@ -232,13 +234,13 @@
         that {code :param} be used for a name of the eventual value, whereas {code :sample} be used for an example of such a value.
         For instance: "
         (code #:|"(compile-file " (:param "filename") ")"|#) " vs " (code #:|"(compile-file " (:sample "/name/of/file") ")"|) ".")
-      
+
       (:definition (:ccldoc :ref) "(:ref target &rest subforms)"
         ""
         "Makes the text specified by {param subforms} into a link to another part of the document as indicated by {param target}.  If
         no {param subforms} are specified, default text is generated based on the target.  In addition, if the specified target is
         a glossary entry or a definition, this reference to it will be listed in the index.
-        
+
         The {param target} name can take one of the following forms:
         "
         (listing :definition
@@ -253,7 +255,7 @@
                  {code (:section \"Description\" :in \"Names and Definitions\")} might be used in a document containing different
                  subsections named {code \"Description\"}.  A fully-qualified unambiguous name of a section might look like
                  {code (:section \"Description\" :in \"Names and Definitions\" :in \"Usage\" :in :document)}.
-                 
+
                  The reversed sequence of parent titles can also be included in one string, separated by {code \"::\"}, with
                  the toplevel document indicated by {code \".\"}.  So the equivalent to above would be
                  {code (:section \"Names and Definitions::Description\")} for the first
@@ -267,109 +269,109 @@
         If the document doesn't actual contain a block named by {param target}, no link will be produced, but the clause
         will still be displayed and, in case of a glossary entry or definition, the reference will be listed in the index.
         "))
-    
+
     (:defsection "Convenience Operators"
-      
+
       "The following operators define more convenient ways of accessing the same functionality
       as the basic operators described in {section Basic Operators}."
-      
+
       (:definition (:ccldoc :document) "(:document title &rest sections)"
         ""
         "Equivalent to {code ({ccldoc :section} title . sections)}")
-      
+
       (:definition (:ccldoc :chapter) "(:chapter title &rest sections)"
         ""
         "Depending on context, this either defines or references a chapter.  When used at top-level of a
         document, it is equivalent to {code ({ccldoc :defsection} title . sections)}. In other contexts,
         only one argument is allowed, and it is equivalent to {code ({ccldoc :ref} (:chapter title))}")
-      
+
       (:definition (:ccldoc :section) "(:section title &rest parent-spec)"
         ""
         "Equivalent to  {code ({ccldoc :ref} (:section title . parent-specs))}.")
-      
+
       (:definition (:ccldoc :variable) "(:variable symbol)"
         ""
         "Equivalent to {code ({ccldoc :ref} (:definition :variable symbol))}")
-      
+
       (:definition (:ccldoc :function) "(:function fspec)"
         ""
         "Equivalent to {code ({ccldoc :ref} (:definition :function fspec))}")
-      
+
       (:definition (:ccldoc :macro) "(:macro symbol)"
         ""
         "Equivalent to {code ({ccldoc :ref} (:definition :macro symbol))}")
-      
+
       (:definition (:ccldoc :class) "(:class symbol)"
         ""
         "Equivalent to {code ({ccldoc :ref} (:definition :class symbol))}")
-      
+
       (:definition (:ccldoc :type) "(:type tspec)"
         ""
         "Equivalent to {code ({ccldoc :ref} (:definition :type tspec))}")
-      
+
       (:definition (:ccldoc :refdef) "(:refdef type name)"
         ""
         "Equivalent to {code ({ccldoc :ref} (:definition type name))}")
-      
+
       (:definition (:ccldoc :term) "(:term string)"
         ""
         "Equivalent to {code ({ccldoc :ref} (:glossentry string))}")
-      
+
       (:definition (:ccldoc :emphasis) "(:emphasis &rest subforms)"
         ""
         "Equivalent to {code ({ccldoc :markup} :emphasis . subforms)}")
-      
+
       (:definition (:ccldoc :system) "(:system &rest subforms)"
         ""
         "Equivalent to {code ({ccldoc :markup} :system . subforms)}")
-      
+
       (:definition (:ccldoc :sample) "(:sample &rest subforms)"
         ""
         "Equivalent to {code ({ccldoc :markup} :sample . subforms)}")
-      
+
       (:definition (:ccldoc :param) "(:param &rest subforms)"
         ""
         "Equivalent to {code ({ccldoc :markup} :param . subforms)}")
-      
+
       (:definition (:ccldoc :code) "(:code &rest subforms)"
         ""
         "Equivalent to {code ({ccldoc :markup} :code . subforms)}")
-      
+
       (:definition (:ccldoc :lbrace) "(:lbrace)"
         ""
         "Equivalent to {code (:quote \"{lbrace}\")}")
-      
+
       (:definition (:ccldoc :rbrace) "(:rbrace)"
         ""
         "Equivalent to {code (:quote \"{rbrace}\")}"))
-    
+
     (:defsection "String Syntax"
       "Strings are the terminal clauses in {CCLDOC} expressions and define the text to be output.
-      
+
       For convenience, strings support a syntax for embedding other clauses, in the form {code {lbrace}operand arguments{rbrace}}.
       The parsing of the arguments is up to the operand, but in general consists of some operand-specific number
       of lisp expressions, with the rest of the arguments forming the body.  The processing of the embedded syntax
       can be avoided by using the {ccldoc quote} operator.
-      
+
       In order to support the embedded syntax, #\\{lbrace} and #\\{rbrace} cannot be entered directly in an unquoted string clause.
       Use {lbrace}lbrace{rbrace} and {lbrace}rbrace{rbrace} instead.
-      
+
       Blank lines (i.e. lines consisting only of whitespace characters) in string clauses are treated as paragraph breaks."))
 
   (:defsection "API Documentation"
-    
+
     (:definition (:function load-document) "(load-document filename &key external-format) => document"
       ""
       "Load a {CCLDOC} source file and return a {class document} object.  The file {param filename} should
       consist of any number of lisp forms followed by a single {CCLDOC} form which should be (or expand into)
       a {ccldoc defsection} expression.  The lisp preceding forms are processed as if by {code LOAD}.")
-    
+
     (:definition (:function output-docbook) "(output-docbook doc filename &key external-format if-exists)"
       ""
       "Takes a {class document} object {param doc} and creates a file in {param filename} containing {docbook-link}
       source."
       )
-    
+
     (:definition (:function output-tracwiki) "(output-tracwiki doc filename &key external-format if-exists)"
       ""
       "Takes a {class document} object {param doc} and creates a file in {param filename} containing {tracwiki-link}
@@ -383,15 +385,15 @@
       source code, in effect disassembling the document.  Note that this output is mainly useful for
       debugging, since all the macros will have been expanded."
       )
-    
-    
+
+
     (:definition (:macro def-expander) "(def-expander name arglist [:parser-types parser-types] &body body)"
       ""
       "Define a {CCLDoc} macro.  The syntax of {param arglist} and {param body} is the same as for {macro defmacro}.
       When the {CCLDoc} processor encounters a form whose {code CAR} is an interned symbol with the same pname as {param name},
       the {param body} of the expander will be invoked with the form destructured against {param arglist}, and the returned
       form will be used instead.
-      
+
       The {param parser-types} option can be used to specify the parsing if {param name} is used with the embedded string syntax.
       It should be an (unquoted) list of some number of {code :lisp} symbols followed by at most one {code :text} symbol.
       The string parser will read as many arguments as there are instances of {code :lisp} using the lisp {code READ} function,
@@ -413,19 +415,19 @@
       "allows the embedded syntax {code {lbrace}markup type Arbitrary text ...{rbrace}}, where {code type} will
       be parsed using the lisp {code READ}, and the rest of the form will be processed by {CCLDOC} and passed in as the
       {param subforms} parameter to the expander.")
-    
+
     (:definition (:macro def-definition-type) "(def-definition-type type (&optional parent-type) &key type-name id-prefix function)"
       ""
       "Adds a new type that can be used to classify name of a {ccldoc definition}.
-      
+
       {param type} is a symbol naming the type being defined (as usual, the input package of the {param type} symbol is
       ignored and the symbol is converted to a keyword during processing)
-      
+
       {param parent-type} is, optionally, an existing type from which the new type descends.  This is used to inherit
       some properties, and to help in matching references to their targets (so for example we know that a reference
       to {code (:definition :function trace)} is applicable to {code (:definition :macro trace)}, because the type
       {code :macro} descends from {code :function}.
-      
+
       {param type-name} the user-visible name of this type, as a string.  If not specified, it defaults to the
       capitalized version of the {param type}.
 
@@ -453,7 +455,7 @@
           (item "{code CONS}" => "a list of {code STRING} or {code CLAUSE-OBJECT} objects (no nested lists), representing a sequence of text")))
 
       (:defsection "Abstract Classes"
-        
+
         (:definition (:class clause-object) "clause-object ()"
           ""
           "The base class of {CCLDOC} objects.  The following functions are applicable to all {code clause-object} instances:"
@@ -462,7 +464,7 @@
             (item "{function clause-document}")
             (item "{function section-level}")
             (item "{function clause-text}")))
-        
+
         (:definition (:class named-clause) "named-clause (clause-object)"
           ""
           "The class of objects which can be linked to from other objects.  The following functions
@@ -470,11 +472,11 @@
           (listing :column
             (item "{function clause-name}")
             (item "{function clause-external-id}")))
-        
+
         (:definition (:class clause-with-title) "clause-with-title (clause-object)"
           ""
           "A mixin class that adds support for the {function clause-title} property")
-        
+
         (:definition (:class clause-with-term) "clause-with-term (clause-object)"
           ""
           "A mixin class that adds support for the {function clause-term} property")
@@ -482,11 +484,11 @@
         (:definition (:class clause-with-body) "clause-with-body (clause-object)"
           ""
           "A mixin class that adds support for the {function clause-body} property")
-        
+
         (:definition (:class clause-with-items) "clause-with-items (clause-object)"
           ""
           "A mixin class that adds support for the {function clause-items} property"))
-      
+
       (:defsection "Concrete Classes"
         (:definition (:class document) "document (section)"
           ""
@@ -537,7 +539,7 @@
           ""
           "Class of a listing.  The listing type is returned by {function listing-type}.  See {ccldoc listing} for the
           list of possible types.
-          
+
           The items of a listing are a vector a {class item} objects, except for {code :definition} listing type,
           where the items are {class term-item} objects.")
         (:definition (:class indexed-clause) "indexed-clause (clause-with-body)"
@@ -570,7 +572,7 @@
           "Class of a definition.  The clause body is the full description of the definition.  The function
           {function definition-signature} returns the signature of the definition and {function definition-summary}
           returns the summary.  {function definition-display-name} returns a user-visible version of the definition name."))
-      
+
 ;;; TOOD: write a fsig expander takes a signature and marks up with {params}
 
       (:defsection "Accessor Functions"
@@ -589,7 +591,7 @@
         (:definition (:function clause-name) "(clause-name named-clause) => name"
           ""
           "Returns the name of the {param named-clause}.  The name is a lisp object uniquely identifying the clause
-          when compared with {code EQUALP}. When {param named-clause} is a {class glossentry}, the name is 
+          when compared with {code EQUALP}. When {param named-clause} is a {class glossentry}, the name is
           a string, the text of the term being defined by the entry.  When {param named-clause} is a {class section},
           the name is a {code CONS} whose {code CAR} is the title of the section and whose {code CDR} is the
           clause-name of the section's parent clause.  When {param named-clause} is a {class definition},
@@ -641,7 +643,7 @@
         (:definition (:function xref-default-body) "(xref-default-body link) => clause"
           ""
           "Returns the default body for the reference that can be used when the user didn't specify one"))
-      
+
       (:defsection "Definition Names"
         (:definition (:class dspec) "dspec ()"
           ""
