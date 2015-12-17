@@ -1,6 +1,6 @@
 # CCLDoc documentation system
 
-CCLDoc is a system for creating lisp documentation. It uses s-expressions to represent document structure, markup, cross references, and contents. It has a small number of basic operators, supports macros for syntax extensions, and supports a simple syntax for embedding expressions in strings for added convenience.
+CCLDoc is a system for creating Lisp documentation. It uses S-expressions to represent document structure, markup, cross references, and contents. It has a small number of basic operators, supports macros for syntax extensions, and supports a simple syntax for embedding expressions in strings for added convenience.
 
 The documentation for Clozure CL is written in CCLDoc.
 
