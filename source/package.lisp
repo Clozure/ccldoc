@@ -1,4 +1,5 @@
 (defpackage ccldoc
+  (:use :cl)
   (:import-from :alexandria
                 #:when-let* #:when-let #:if-let
                 #:starts-with-subseq)
