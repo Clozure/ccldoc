@@ -98,11 +98,8 @@
 (defmethod clause-text ((clauses list))
   (reduce (lambda (text clause) (concatenate 'string text (clause-text clause))) clauses :initial-value ""))
 
-(defclass docerror (error clause-object)
+(defclass docerror (clause-object)
   ((clause-text :initarg :message :reader clause-text)))
-
-(defmethod report-condition ((c docerror) s)
-  (write-string (clause-text c) s))
 
 ;; named clauses have a globally unique name (a lisp object, compared with EQUALP) which can be used to
 ;;  reference them from other objects.  The name is only used during compilation, once the DOM is built,
@@ -183,8 +180,17 @@
   ;; Close enough.  This is just for debugging anyway.
   (concatenate 'string (call-next-method) (string #\Newline)))
 
+#+sbcl
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (sb-ext:unlock-package (find-package :cl)))
+
+;;; TODO change this to a different name - defclassing CL:BLOCK is undefined behaviour
 (defclass block (clause-with-optional-title clause-with-body)
   ())
+
+#+sbcl
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (sb-ext:lock-package (find-package :cl)))
 
 (deftype markup-type () '(member :emphasis :system :sample :param :code))
 

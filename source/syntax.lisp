@@ -110,7 +110,9 @@
          (forms (with-ccldoc-packages
                     (with-open-file (stream *current-file*
                                             :element-type 'base-char
-                                            :external-format (if (eq external-format :default) :inferred external-format))
+                                            :external-format
+                                            #-ccl (or external-format :utf-8)
+                                            #+ccl (if (eq external-format :default) :inferred external-format))
                       (loop for form = (load-to-ccldoc-form filename stream) then (read stream nil stream)
                         until (eq form stream) collect form)))))
     (subforms-clause *parent-clause* forms)))

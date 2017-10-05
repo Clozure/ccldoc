@@ -16,7 +16,8 @@
     :depends-on ("alexandria"
 		 "split-sequence"
 		 "s-xml"
-		 "cl-who")
+		 "cl-who"
+		 #-ccl "ccl-compat")
     :serial t
     :components ((:file "package")
 		 (:file "utils")
