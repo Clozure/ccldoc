@@ -24,7 +24,9 @@
   (with-ccldoc-packages
       (with-open-file (stream filename
                               :element-type 'base-char
-                              :external-format (if (eq external-format :default) :inferred external-format))
+                              :external-format
+                              #-ccl (or external-format :utf-8)
+                              #+ccl (if (eq external-format :default) :inferred external-format))
         (prog1 (load-to-ccldoc-form filename stream)
           (unless (eq (read stream nil :eof) :eof)
             (error "Extranenous forms following document in ~s" filename))))))

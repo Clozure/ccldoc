@@ -1,0 +1,17 @@
+# lisp
+*.FASL
+*.fasl
+*.lisp-temp
+*.lx64fsl
+
+.__*
+
+# emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*

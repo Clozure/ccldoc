@@ -105,7 +105,7 @@
       (let ((lines (split-sequence #\newline clause)))
         (loop for line in lines as first = t then nil
           do (unless first (wiki-newline stream))
-          do (let ((start (if *wiki-inline* 0 (position-if-not #'whitespacep line)))
+          do (let ((start (if *wiki-inline* 0 (position-if-not #'whitespacep line)))
                     (end (length line)))
                 (when start
                   (when-let (skip (specials line start "``" *special-at-start-of-line*))

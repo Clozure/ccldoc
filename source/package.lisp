@@ -1,4 +1,5 @@
 (defpackage ccldoc
+  (:use :cl)
   (:import-from :alexandria
                 #:when-let* #:when-let #:if-let
                 #:starts-with-subseq)
@@ -13,7 +14,10 @@
                 #:cheap-eval-in-environment
                 #:read-recording-source #:*loading-toplevel-location* #:*nx-source-note-map*
                 #:block-like #:progn-print #:*print-right-margin*
-                #:*show-condition-context*)
+                #:*show-condition-context*
+                #:assq #:whitespacep #:require-type #:neq #:memq
+                #:*loading-file-source-file* #:nfunction
+                #:*save-source-locations* #:record-source-file)
   ;;; Syntax.  Don't really need to export these, but might as well collect them in one place
   (:export
    ;; operators
