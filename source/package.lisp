@@ -4,7 +4,8 @@
                 #:when-let* #:when-let #:if-let
                 #:starts-with-subseq)
   (:import-from :split-sequence #:split-sequence)
-  (:import-from :ccl
+  (:import-from #+:ccl :ccl
+                #-:ccl :ccl-compat
                 #:pkg-arg #:no-such-package
                 #:report-condition
                 #:definition-base-name #:definition-type-instance #:method-def-parameters
@@ -18,6 +19,7 @@
                 #:assq #:whitespacep #:require-type #:neq #:memq
                 #:*loading-file-source-file* #:nfunction
                 #:*save-source-locations* #:record-source-file)
+  #-:ccl (:shadow :block)
   ;;; Syntax.  Don't really need to export these, but might as well collect them in one place
   (:export
    ;; operators
