@@ -56,7 +56,9 @@
   (let ((text (clause-text c)))
     (when (> (length text) 50)
       (setq text (concatenate 'string (subseq text 0 50) "...")))
-    (setq text (substitute #\nko_digit_one #\newline text))
+    (setq text (substitute #-:lispworks #\nko_digit_one
+                           #+:lispworks #\U+07c1
+                           #\newline text))
     (princ text stream)))
 
 ;; Could automate this, but for now.

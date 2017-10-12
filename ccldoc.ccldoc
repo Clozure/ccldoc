@@ -41,7 +41,8 @@
 
 ;; Use this package to show explicit packages on unexported symbols...
 (defpackage :ccldoc-documentation
-  (:use :ccldoc :cl))
+  (:use :ccldoc :cl)
+  #-:ccl (:shadow :block))
 
 
 
