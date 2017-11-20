@@ -187,8 +187,11 @@
     (:function 1000)  ;; (:lisp)
     (:type 1000)      ;; (:lisp)
     (:include-file 1000)
+    (:index 0)
     (:index-section 1000)
     (:link 1)  ;; (:identifier :text) (def-operator link (url &rest subforms)
+    (:markup 1)
+    (:quote 0)
     (:term 0) ;; (:string) - only if no subforms  (def-operator term (gloss-target &rest subforms)
     (:ref 1)))	 ;; (:lisp :string)       (def-operator ref target &rest subforms)
 
