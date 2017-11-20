@@ -13,6 +13,9 @@
 ;;; limitations under the License.
 
 (defsystem "ccldoc"
+    :author "Clozure Associates and contributors"
+    :description "create lisp documentation using s-expressions"
+    :license "Apache License 2.0"
     :depends-on ("alexandria"
 		 "split-sequence"
 		 "s-xml"
