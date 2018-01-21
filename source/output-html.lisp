@@ -36,6 +36,7 @@
 (defun write-html-toc (document stream &optional (depth 2))
   (let* ((body-clauses (clause-body document))
 	 (sections (if (listp body-clauses)
+		       ;; My Emacs formating, should I change it?
 		       (remove-if-not #'(lambda (clause)
 					  (typep clause 'section))
 				      body-clauses)
