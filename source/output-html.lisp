@@ -192,7 +192,7 @@
 
 (defmethod write-html ((clause markup) stream)
   (let ((tag (ecase (markup-type clause)
-	       (:emphasis :emph)
+	       (:emphasis :em)
 	       (:code :code)
 	       (:param :i)
 	       (:sample :i)
