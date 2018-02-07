@@ -19,24 +19,41 @@
 ;;
 ;; Basic ccldoc type is CLAUSE
 ;; A clause is a CLAUSE-OBJECT, or a STRING, or a LIST of clause-objects or strings.
-;;   A STRING represents leaf data
+;;   A STRING represents leaf data, i.e. every leaf in tree structure of
+;;   CLAUSE is a string.
 ;;   A LIST (of clause-objects or strings - no embedded lists, they get flattened out) represents a sequence of text
 
 ;; compilation state variables.
-(defvar *parent-clause*)
+(defvar *parent-clause*) 
 (defvar *current-file*)
 (defvar *source-form*)
 (defvar *section-package*)
 
-(defclass clause-object ()
-  ((parent :type (or null clause-object) :initform *parent-clause* :accessor clause-parent)
-   (source-form :initform *source-form* :reader clause-source-form)))
+(defclass clause-object (standard-object)
+  ((parent :type (or null clause-object) :initform *parent-clause*
+	   :accessor clause-parent)
+   (source-form :initform *source-form* :reader clause-source-form))
+  (:documentation "Basic class of CCLDoc document structure, represent some
+unit of document structure e.g. chapter or section.
+
+Consists of two slots PARENT and SOURCE-FORM. PARENT is clus-object or empty
+list, represents unit of document to which current clause-object belong.
+SOURCE-FORM is content of text that belong to specifically to this
+clause-object."))
 
 ;; For decompiling.
 (defmethod default-operator ((clause clause-object))
+  ;; TODO Check what `op-name' means
   (op-name (class-name (class-of clause))))
 
-(deftype clause () '(or string clause-object cons))
+(deftype clause ()
+  "A clause is a CLAUSE-OBJECT, or a STRING, or a LIST of clause-objects
+or strings.
+
+A STRING represents leaf data, i.e. every leaf in tree structure of CLAUSE
+is a string. CLAUSE-OBJECT is CCLDoc class that represents unit of document
+structure."
+  '(or string clause-object cons))
 
 (defclass inline-clause (clause-object) ())
 
@@ -55,6 +72,7 @@
 (defmethod princ-ccldoc ((c clause-object) stream)
   (let ((text (clause-text c)))
     (when (> (length text) 50)
+      ;; TODO Not setf??
       (setq text (concatenate 'string (subseq text 0 50) "...")))
     (setq text (substitute #\u+21a9	;leftwards arrow with hook
                            #\newline text))
@@ -146,7 +164,7 @@
   ((body :type clause)))
 
 (defclass clause-with-term (clause-object)
-  ((term :initarg :term :type (or null clause) :reader clause-term)))  
+  ((term :initarg :term :type (or null clause) :reader clause-term)))
 (defmethod subclause-slots append ((clause clause-with-term)) '(term))
 
 ;; This is a clause with items -- a sequence of clauses where the position matters,
@@ -447,9 +465,7 @@
                     (map nil #'resolve thing))
                    (t
                     (loop for slot in (subclause-slots thing)
-                      do (resolve (slot-value thing slot)))
+			  do (resolve (slot-value thing slot)))
                     (when (typep thing 'reference-placeholder)
                       (resolve-placeholder thing))))))
     (resolve doc)))
-
-
