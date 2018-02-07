@@ -24,7 +24,7 @@
 ;;   A LIST (of clause-objects or strings - no embedded lists, they get flattened out) represents a sequence of text
 
 ;; compilation state variables.
-(defvar *parent-clause*) 
+(defvar *parent-clause*)
 (defvar *current-file*)
 (defvar *source-form*)
 (defvar *section-package*)
