@@ -36,7 +36,7 @@
   (:documentation "Basic class of CCLDoc document structure, represent some
 unit of document structure e.g. chapter or section.
 
-Consists of two slots PARENT and SOURCE-FORM. PARENT is clus-object or empty
+Consists of two slots PARENT and SOURCE-FORM. PARENT is a clause-object or empty
 list, represents unit of document to which current clause-object belong.
 SOURCE-FORM is content of text that belong to specifically to this
 clause-object."))
@@ -72,9 +72,8 @@ structure."
 (defmethod princ-ccldoc ((c clause-object) stream)
   (let ((text (clause-text c)))
     (when (> (length text) 50)
-      ;; TODO Not setf??
-      (setq text (concatenate 'string (subseq text 0 50) "...")))
-    (setq text (substitute #\u+21a9	;leftwards arrow with hook
+      (setf text (concatenate 'string (subseq text 0 50) "...")))
+    (setf text (substitute #\u+21a9	;leftwards arrow with hook
                            #\newline text))
     (princ text stream)))
 
