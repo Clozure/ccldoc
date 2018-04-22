@@ -21,11 +21,6 @@
          :report "Ignore the assertion"
          nil))))
 
-(defmacro def-predicate (name type)
-  (let ((obj (gensym)))
-    `(defun ,name (,obj) (typep ,obj ',type))))
-
-
 ;; Treat uninterned symbols as string, so as to provide an alternative syntax for entering text with
 ;; many double quotes.
 (defun gensymp (thing)
