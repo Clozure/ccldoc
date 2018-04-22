@@ -347,7 +347,7 @@
                     (eq (caar name) :table)
                     (string (cadar name))
                     (null (cddar name))))
-           (or (op-name-p (cdr name) :*) ;; relative section name
+           (or (operator= (cdr name) :*) ;; relative section name
                (canonical-clause-name-p (cdr name))))))
 
 (defun section-name-p (name)
@@ -372,7 +372,7 @@
          (and (glossary-section doc)
               (clause-name (glossary-section doc))))
         (t
-         (cons (car name) (if (op-name-p (cdr name) :*)
+         (cons (car name) (if (operator= (cdr name) :*)
                             nil
                             (as-fully-qualified-name doc (cdr name)))))))
 
@@ -380,14 +380,14 @@
   (or (dspecp cname) ;; dspec always wild because of subclassing
       (and (consp cname)
            (not (keywordp (car cname)))
-           (or (op-name-p (cdr cname) :*)
+           (or (operator= (cdr cname) :*)
                (wildcard-canonical-name-p (cdr cname))))))
 
 (defun wild-name-match-p (clause-name wild-name)
   (if (consp clause-name)
     (and (consp wild-name)
          (equalp (car clause-name) (car wild-name))
-         (or (op-name-p (cdr wild-name) :*)
+         (or (operator= (cdr wild-name) :*)
              (wild-name-match-p (cdr clause-name) (cdr wild-name))))
     (and (dspecp clause-name)
          (dspecp wild-name)

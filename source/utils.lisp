@@ -21,8 +21,6 @@
          :report "Ignore the assertion"
          nil))))
 
-;; Treat uninterned symbols as string, so as to provide an alternative syntax for entering text with
-;; many double quotes.
 (defun gensymp (thing)
   (and (symbolp thing) (null (symbol-package thing))))
 
@@ -38,39 +36,40 @@
          (intern (symbol-name sym) :keyword)
          (find-symbol (symbol-name sym) :keyword))))
 
-(defun op-name-p (sym1 sym2)
-  (cassert (keywordp sym2))
+(defun operator= (sym1 sym2)
   (and (symbolp (desym sym1))
+       (symbolp (desym sym2))
        (string= (symbol-name sym1) (symbol-name sym2))))
 
 (defun normalize-whitespace (string)
   (cassert (stringp string))
-  (let ((res (make-array (length string) :element-type 'character :fill-pointer 0)))
+  (let ((res (make-array (length string) :element-type 'character
+                                         :fill-pointer 0)))
     (loop for lastch = #\x then ch for ch across string
-      do (unless (whitespacep ch)
-           (when (whitespacep lastch)
-             (vector-push #\space res))
-           (vector-push ch res)))
+          do (unless (whitespacep ch)
+               (when (whitespacep lastch)
+                 (vector-push #\space res))
+               (vector-push ch res)))
     (let ((reslen (fill-pointer res)))
       (subseq res (if (and (> reslen 0) (eql #\space (aref res 0))) 1 0) reslen))))
 
 (defun concat-by (sep &rest strings)
   (let* ((sep-seq (if (typep sep 'sequence) sep (string sep)))
          (args (loop for string in strings
-                 unless (eql (length string) 0) collect string and collect sep-seq)))
+                     unless (eql (length string) 0) collect string and collect sep-seq)))
     (apply #'concatenate 'string (butlast args))))
 
 (defun read-all-from-string (string &key start end package)
   (multiple-value-bind (value pos)
-                       (let ((*read-eval* nil)
-                             (*package* (or package *package*)))
-                         ;; Read-from-string doesn't accept NIL start/end args, natch.
-                         (read-from-string string t nil :start (or start 0) :end (or end (length string))))
+      (let ((*read-eval* nil)
+            (*package* (or package *package*)))
+        ;; Read-from-string doesn't accept NIL start/end args, natch.
+        (read-from-string string t nil :start (or start 0) :end (or end (length string))))
     (cassert (eql pos (or end (length string))))
     value))
 
 ;; Need to be able to support lisp names that include symbols in packages that don't exist in the current image.
-;; For now, this horrible kludge...  
+;; For now, this horrible kludge...
 ;; TODO: make sure symbols not needed once DOM is built, and delete the fake packages once compilation done.
 (defvar *ccldoc-fake-packages* nil)
 
@@ -84,17 +83,17 @@
   `(loop
      (handler-case (return (progn ,@body))
        (no-such-package (c)
-                        (let ((pkg-name (package-error-package c))) ; 
-                          (unless (and (stringp pkg-name) (not (find-package pkg-name)))
-                            (error c))
-                          (ccldoc-package pkg-name)))
+         (let ((pkg-name (package-error-package c))) ;
+           (unless (and (stringp pkg-name) (not (find-package pkg-name)))
+             (error c))
+           (ccldoc-package pkg-name)))
        (simple-error (c)
-                     (let ((args (simple-condition-format-arguments c)))
-                       (unless (and (search "No external symbol named ~S in package ~S" (simple-condition-format-control c))
-                                    (member (cadr args) *ccldoc-fake-packages*)
-                                    (stringp (car args)))
-                         (error c))
-                       (export (intern (car args) (cadr args)) (cadr args)))))))
+         (let ((args (simple-condition-format-arguments c)))
+           (unless (and (search "No external symbol named ~S in package ~S" (simple-condition-format-control c))
+                        (member (cadr args) *ccldoc-fake-packages*)
+                        (stringp (car args)))
+             (error c))
+           (export (intern (car args) (cadr args)) (cadr args)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -151,7 +150,7 @@
     (when old (setq *dspec-types* (remove old *dspec-types*)))
     (push info *dspec-types*)
     type))
-  
+
 (defun dspec-type-for-type-name (type-name)
   (dspecinfo-type (find type-name *dspec-types* :key #'dspecinfo-type-name :test #'equalp)))
 
@@ -299,4 +298,3 @@
       (eq type super)
       (when-let (parent (parent-type-for-dspec-type type))
         (dspec-subtypep parent super))))
-
