@@ -22,6 +22,7 @@
          nil))))
 
 (defun gensymp (thing)
+  "Returns true iff THING is a gensym (an uninterned symbol)."
   (and (symbolp thing) (null (symbol-package thing))))
 
 (defun desym (thing)
@@ -36,27 +37,35 @@
          (intern (symbol-name sym) :keyword)
          (find-symbol (symbol-name sym) :keyword))))
 
-(defun operator= (sym1 sym2)
-  (and (symbolp (desym sym1))
-       (symbolp (desym sym2))
-       (string= (symbol-name sym1) (symbol-name sym2))))
+(defun operator= (operator-1 operator-2)
+  "Returns true iff the two CCLDOC operator are equivalent to each other."
+  (and (symbolp (desym operator-1))
+       (symbolp (desym operator-2))
+       (string= (symbol-name operator-1) (symbol-name operator-2))))
 
 (defun normalize-whitespace (string)
-  (cassert (stringp string))
+  "Returns a copy of the string with normalized whitespace. All occurrences
+of whitespace in the string are turned into spaces; additionally, multiple
+consecutive whitespace characters are collapsed into one."
+  (check-type string string)
   (let ((res (make-array (length string) :element-type 'character
                                          :fill-pointer 0)))
-    (loop for lastch = #\x then ch for ch across string
+    (loop for lastch = #\x then ch
+          for ch across string
           do (unless (whitespacep ch)
                (when (whitespacep lastch)
-                 (vector-push #\space res))
+                 (vector-push #\Space res))
                (vector-push ch res)))
-    (let ((reslen (fill-pointer res)))
-      (subseq res (if (and (> reslen 0) (eql #\space (aref res 0))) 1 0) reslen))))
+    (let* ((length (fill-pointer res))
+           (start (if (and (> length 0) (eql #\Space (aref res 0))) 1 0)))
+      (subseq res start length))))
 
 (defun concat-by (sep &rest strings)
+  "Concatenates all STRINGS with SEP inserted between each pair of them."
   (let* ((sep-seq (if (typep sep 'sequence) sep (string sep)))
          (args (loop for string in strings
-                     unless (eql (length string) 0) collect string and collect sep-seq)))
+                     unless (eql (length string) 0)
+                       collect string and collect sep-seq)))
     (apply #'concatenate 'string (butlast args))))
 
 (defun read-all-from-string (string &key start end package)
