@@ -21,14 +21,8 @@
          :report "Ignore the assertion"
          nil))))
 
-(defmacro def-predicate (name type)
-  (let ((obj (gensym)))
-    `(defun ,name (,obj) (typep ,obj ',type))))
-
-
-;; Treat uninterned symbols as string, so as to provide an alternative syntax for entering text with
-;; many double quotes.
 (defun gensymp (thing)
+  "Returns true iff THING is a gensym (an uninterned symbol)."
   (and (symbolp thing) (null (symbol-package thing))))
 
 (defun desym (thing)
@@ -43,39 +37,39 @@
          (intern (symbol-name sym) :keyword)
          (find-symbol (symbol-name sym) :keyword))))
 
-(defun op-name-p (sym1 sym2)
-  (cassert (keywordp sym2))
-  (and (symbolp (desym sym1))
-       (string= (symbol-name sym1) (symbol-name sym2))))
+(defun operator= (operator-1 operator-2)
+  "Returns true iff the two CCLDOC operator are equivalent to each other."
+  (and (symbolp (desym operator-1))
+       (symbolp (desym operator-2))
+       (string= (symbol-name operator-1) (symbol-name operator-2))))
 
 (defun normalize-whitespace (string)
-  (cassert (stringp string))
-  (let ((res (make-array (length string) :element-type 'character :fill-pointer 0)))
-    (loop for lastch = #\x then ch for ch across string
-      do (unless (whitespacep ch)
-           (when (whitespacep lastch)
-             (vector-push #\space res))
-           (vector-push ch res)))
-    (let ((reslen (fill-pointer res)))
-      (subseq res (if (and (> reslen 0) (eql #\space (aref res 0))) 1 0) reslen))))
+  "Returns a copy of the string with normalized whitespace. All occurrences
+of whitespace in the string are turned into spaces; additionally, multiple
+consecutive whitespace characters are collapsed into one."
+  (check-type string string)
+  (let ((res (make-array (length string) :element-type 'character
+                                         :fill-pointer 0)))
+    (loop for lastch = #\x then ch
+          for ch across string
+          do (unless (whitespacep ch)
+               (when (whitespacep lastch)
+                 (vector-push #\Space res))
+               (vector-push ch res)))
+    (let* ((length (fill-pointer res))
+           (start (if (and (> length 0) (eql #\Space (aref res 0))) 1 0)))
+      (subseq res start length))))
 
 (defun concat-by (sep &rest strings)
+  "Concatenates all STRINGS with SEP inserted between each pair of them."
   (let* ((sep-seq (if (typep sep 'sequence) sep (string sep)))
          (args (loop for string in strings
-                 unless (eql (length string) 0) collect string and collect sep-seq)))
+                     unless (eql (length string) 0)
+                       collect string and collect sep-seq)))
     (apply #'concatenate 'string (butlast args))))
 
-(defun read-all-from-string (string &key start end package)
-  (multiple-value-bind (value pos)
-                       (let ((*read-eval* nil)
-                             (*package* (or package *package*)))
-                         ;; Read-from-string doesn't accept NIL start/end args, natch.
-                         (read-from-string string t nil :start (or start 0) :end (or end (length string))))
-    (cassert (eql pos (or end (length string))))
-    value))
-
 ;; Need to be able to support lisp names that include symbols in packages that don't exist in the current image.
-;; For now, this horrible kludge...  
+;; For now, this horrible kludge...
 ;; TODO: make sure symbols not needed once DOM is built, and delete the fake packages once compilation done.
 (defvar *ccldoc-fake-packages* nil)
 
@@ -89,32 +83,19 @@
   `(loop
      (handler-case (return (progn ,@body))
        (no-such-package (c)
-                        (let ((pkg-name (package-error-package c))) ; 
-                          (unless (and (stringp pkg-name) (not (find-package pkg-name)))
-                            (error c))
-                          (ccldoc-package pkg-name)))
+         (let ((pkg-name (package-error-package c))) ;
+           (unless (and (stringp pkg-name) (not (find-package pkg-name)))
+             (error c))
+           (ccldoc-package pkg-name)))
+       ;; TODO this is CCL-specific and will fail on other implementations
        (simple-error (c)
-                     (let ((args (simple-condition-format-arguments c)))
-                       (unless (and (search "No external symbol named ~S in package ~S" (simple-condition-format-control c))
-                                    (member (cadr args) *ccldoc-fake-packages*)
-                                    (stringp (car args)))
-                         (error c))
-                       (export (intern (car args) (cadr args)) (cadr args)))))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Patch s-xml pretty printing to not introduce spacing when not appropriate....
-
-(defvar *whitespace-allowed-tags* nil)
-
-(defmethod s-xml:print-xml-dom :around (dom (input-type (eql :lxml)) stream pretty level)
-  (when (and pretty (consp dom))
-    (let ((tag (first dom)))
-      (when (consp tag) (setq tag (car tag)))
-      (unless (member tag *whitespace-allowed-tags*)
-        (setq pretty nil))))
-  (call-next-method dom input-type stream pretty level))
+         (let ((args (simple-condition-format-arguments c)))
+           (unless (and (search "No external symbol named ~S in package ~S"
+                                (simple-condition-format-control c))
+                        (member (cadr args) *ccldoc-fake-packages*)
+                        (stringp (car args)))
+             (error c))
+           (export (intern (car args) (cadr args)) (cadr args)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -156,7 +137,7 @@
     (when old (setq *dspec-types* (remove old *dspec-types*)))
     (push info *dspec-types*)
     type))
-  
+
 (defun dspec-type-for-type-name (type-name)
   (dspecinfo-type (find type-name *dspec-types* :key #'dspecinfo-type-name :test #'equalp)))
 
@@ -283,8 +264,10 @@
   (let* ((ctype (intern (string type) :keyword))
          (cname (canonicalize-definition-name ctype name)))
     (unless cname
-      (let* ((dwimmed (and (stringp name) (with-ccldoc-packages (read-all-from-string name))))
-             (dwimmed-cname (and dwimmed (canonicalize-definition-name ctype dwimmed))))
+      (let* ((dwimmed (and (stringp name)
+                           (with-ccldoc-packages (read-from-string name))))
+             (dwimmed-cname
+               (and dwimmed (canonicalize-definition-name ctype dwimmed))))
         (unless dwimmed-cname
           (error "Invalid ~s definition name ~s" type name))
         (setq cname dwimmed-cname)))
@@ -304,4 +287,3 @@
       (eq type super)
       (when-let (parent (parent-type-for-dspec-type type))
         (dspec-subtypep parent super))))
-

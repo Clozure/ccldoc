@@ -112,7 +112,7 @@
         (t (let* ((first (car name))
                   (op (if (table-name-p name) 'table 'section))
                   (title (if (eq op 'table) (cadr first) first)))
-             `(,op ,title ,@(unless (op-name-p (cdr name) :*)
+             `(,op ,title ,@(unless (operator= (cdr name) :*)
                               (let ((parent (decompile-clause-name (cdr name))))
                                 (if (and (consp parent) (eq (car parent) 'section))
                                   `(:in ,@(cdr parent))
@@ -214,7 +214,7 @@
 
 (defun combine-strings (list)
   (flet ((parap (x)
-           (and (consp x) (op-name-p (car x) :para) (stringyp (cadr x)) (null (cddr x))))
+           (and (consp x) (operator= (car x) :para) (stringyp (cadr x)) (null (cddr x))))
          (depara (para)
            ;; If paragraph comes from parsing something like <para>First line ..., then the first line
            ;; will have no indentation even though the rest of the paragraph might.  Make our first line
@@ -290,7 +290,7 @@
                            (stringyp (cadr initial))
                            (evenp (length final))
                            (loop for (in ttl) on final by #'cddr
-                             always (and (op-name-p in :in) (stringyp ttl))))
+                             always (and (operator= in :in) (stringyp ttl))))
                       (gensymcat "{"  (princ-to-string op)
                                  " "
                                  (format nil "~{~a~^::~}"

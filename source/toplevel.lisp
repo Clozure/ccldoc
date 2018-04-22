@@ -383,6 +383,6 @@
         ((equal name '(:index)) "Index")
         ((equal name '(:glossary)) "Glossary")
         (t (let ((title (car name)))
-             (if (and (consp title) (op-name-p (car title) :table))
+             (if (and (consp title) (operator= (car title) :table))
                (cadr title)
                title)))))
