@@ -14,13 +14,27 @@
 
 (in-package :ccldoc)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Patch s-xml pretty printing to not introduce spacing when not appropriate....
+
+(defvar *whitespace-allowed-tags* nil)
+
+(defmethod s-xml:print-xml-dom :around (dom (input-type (eql :lxml)) stream pretty level)
+  (when (and pretty (consp dom))
+    (let ((tag (first dom)))
+      (when (consp tag) (setq tag (car tag)))
+      (unless (member tag *whitespace-allowed-tags*)
+        (setq pretty nil))))
+  (call-next-method dom input-type stream pretty level))
+
 
 (defun ccldoc:output-docbook (doc filename &key external-format (if-exists :supersede))
   (let ((form (generate-docbook-form doc)))
     (with-open-file (s filename :direction :output :if-exists if-exists :external-format external-format)
       (write-string "<?xml version=\"1.0\" encoding=\"utf-8\"?>
                     <!DOCTYPE book PUBLIC \"-//OASIS//DTD DocBook XML V4.5//EN\" \"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd\">
-                    
+
                     " s)
       (let ((*whitespace-allowed-tags* '(:|book| :|bookinfo| :|chapter| :|section| :|refsect1| :|refsect2| :|refsect3| :|blockquote|
                                          :|table| :|tgroup| :|tbody| :|row| :|glossentry| :|varlistentry|
@@ -82,7 +96,7 @@
 (defmethod generate-docbook-form ((clause index-section))
   `(,(docbook-tag clause :|index|)
     ,@(docbook-title* clause)))
-  
+
 (defmethod generate-docbook-form ((clause glossary-section))
   `(,(docbook-tag clause :|glossary|)
     ,@(docbook-title* clause)
@@ -130,7 +144,7 @@
        ((:|tbody|) ,@(cdr rows))))))
 
 (defmethod generate-docbook-form ((clause row))
-  `(,(docbook-tag clause :|row|)  
+  `(,(docbook-tag clause :|row|)
     ,@(map 'list (lambda (item)
                    `((:|entry|) ,@(generate-docbook-list item)))
            (clause-items clause))))
@@ -157,7 +171,7 @@
        ,@(map 'list (lambda (item)
                       `(,subtag ,@(generate-docbook-list item)))
               (clause-items clause))))))
-      
+
 
 (defmethod generate-docbook-form ((clause term-item))
   `((:|phrase|)
