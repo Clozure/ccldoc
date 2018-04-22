@@ -68,15 +68,6 @@ consecutive whitespace characters are collapsed into one."
                        collect string and collect sep-seq)))
     (apply #'concatenate 'string (butlast args))))
 
-(defun read-all-from-string (string &key start end package)
-  (multiple-value-bind (value pos)
-      (let ((*read-eval* nil)
-            (*package* (or package *package*)))
-        ;; Read-from-string doesn't accept NIL start/end args, natch.
-        (read-from-string string t nil :start (or start 0) :end (or end (length string))))
-    (cassert (eql pos (or end (length string))))
-    value))
-
 ;; Need to be able to support lisp names that include symbols in packages that don't exist in the current image.
 ;; For now, this horrible kludge...
 ;; TODO: make sure symbols not needed once DOM is built, and delete the fake packages once compilation done.
@@ -96,9 +87,11 @@ consecutive whitespace characters are collapsed into one."
            (unless (and (stringp pkg-name) (not (find-package pkg-name)))
              (error c))
            (ccldoc-package pkg-name)))
+       ;; TODO this is CCL-specific and will fail on other implementations
        (simple-error (c)
          (let ((args (simple-condition-format-arguments c)))
-           (unless (and (search "No external symbol named ~S in package ~S" (simple-condition-format-control c))
+           (unless (and (search "No external symbol named ~S in package ~S"
+                                (simple-condition-format-control c))
                         (member (cadr args) *ccldoc-fake-packages*)
                         (stringp (car args)))
              (error c))
@@ -286,8 +279,10 @@ consecutive whitespace characters are collapsed into one."
   (let* ((ctype (intern (string type) :keyword))
          (cname (canonicalize-definition-name ctype name)))
     (unless cname
-      (let* ((dwimmed (and (stringp name) (with-ccldoc-packages (read-all-from-string name))))
-             (dwimmed-cname (and dwimmed (canonicalize-definition-name ctype dwimmed))))
+      (let* ((dwimmed (and (stringp name)
+                           (with-ccldoc-packages (read-from-string name))))
+             (dwimmed-cname
+               (and dwimmed (canonicalize-definition-name ctype dwimmed))))
         (unless dwimmed-cname
           (error "Invalid ~s definition name ~s" type name))
         (setq cname dwimmed-cname)))
