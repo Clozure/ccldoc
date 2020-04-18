@@ -268,9 +268,8 @@
           (:item "{code :glossary} or {code (:section :glossary)}" => "Targets the glossary section")
           (:item "{code (:chapter title)}" => "Equivalent to {code (:section title :in :document)}"))
         "
-        If the document doesn't actual contain a block named by {param target}, no link will be produced, but the clause
-        will still be displayed and, in case of a glossary entry or definition, the reference will be listed in the index.
-        "))
+        If the document doesn't actually contain a block named by {param target}, no link will be produced, but the clause
+        will still be displayed and, in case of a glossary entry or definition, the reference will be listed in the index."))
 
     (:defsection "Convenience Operators"
 
