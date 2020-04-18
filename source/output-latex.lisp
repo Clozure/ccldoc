@@ -157,7 +157,7 @@
 		  stream))
   (format stream "~&\\end{lstlisting}~%"))
 
-(defmethod write-latex ((clause block) stream)
+(defmethod write-latex ((clause text-block) stream)
   (format stream "~&\\begin{quotation}~%")
   (write-latex (clause-body clause) stream)
   (format stream "~&\\end{quotation}~2%"))

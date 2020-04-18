@@ -33,13 +33,12 @@
                 #:assq #:whitespacep #:require-type #:neq #:memq
                 #:*loading-file-source-file* #:nfunction
                 #:*save-source-locations* #:record-source-file)
-  #-:ccl (:shadow :block)
   ;;; Syntax.  Don't really need to export these, but might as well collect them in one place
   (:export
    ;; operators
    :include-file
    :defsection :index-section :glossary-section
-   :block :code-block :glossentry :definition
+   :text-block :code-block :glossentry :definition
    :table :row :item :para
    :clause :index :link :markup :ref :quote
    ;; macros
@@ -73,7 +72,7 @@
    #:listing #:listing-type
    #:code-block
    #:markup #:markup-type
-   #:block
+   #:text-block
    #:para
    #:term-item
    #:item

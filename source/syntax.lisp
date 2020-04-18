@@ -174,11 +174,11 @@
   (subforms-to-body (make-instance 'para) subforms))
 
 ;; Like a subsection but doesn't get numbered and doesn't generate a target
-(def-operator block (title-and-options &rest subforms)
+(def-operator text-block (title-and-options &rest subforms)
   (multiple-value-bind (title) (parse-arg-and-options title-and-options
                                                       :type '(or null string)
                                                       :options ())
-    (para-subforms-to-body (make-instance 'block :title (normalize-title title)) subforms)))
+    (para-subforms-to-body (make-instance 'text-block :title (normalize-title title)) subforms)))
 
 (def-operator code-block (&rest subforms)
   (subforms-to-body (make-instance 'code-block) subforms))

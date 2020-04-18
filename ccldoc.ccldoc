@@ -41,10 +41,7 @@
 
 ;; Use this package to show explicit packages on unexported symbols...
 (defpackage :ccldoc-documentation
-  (:use :ccldoc :cl)
-  #-:ccl (:shadow :block))
-
-
+  (:use :ccldoc :cl))
 
 ;; TODO: document the :package arg to defsection!
 (:defsection ("{CCLDOC} Documentation system" :package :ccldoc-documentation)
@@ -117,7 +114,7 @@
         It may contain {ccldoc glossentry} definitions, although note that {ccldoc glossentry} definitions
         can actually occur anywhere in the document and will be placed in the glossary and sorted automatically")
 
-      (:definition (:ccldoc :block) "(:block title &rest subforms)"
+      (:definition (:ccldoc :text-block) "(:text-block title &rest subforms)"
         ""
         "Defines a block of text set off (indented) from the main text.  The {param title} can
         be {code NIL} to create an anonymous block.  Note however that even when titled, a block
@@ -156,7 +153,7 @@
 
         {param signature} is the syntactic synopsis of the definition.
         "
-        (block "Note"
+        (text-block "Note"
           "Someday I'd like the signature to be a lisp expression that will be automatically converted
           to text with consistent markup for parameters and values, but that is not implemented right now.
           For now it might be best for document consistency to simply avoid markup in the signature")
@@ -512,7 +509,7 @@
         (:definition (:class code-block) "code-block (clause-with-body)"
           ""
           "Class of a block to be displayed as code with verbatim line breaks and spacing")
-        (:definition (:class block) "block (clause-with-title clause-with-body)"
+        (:definition (:class text-block) "text-block (clause-with-title clause-with-body)"
           ""
           "Class of a block, with an optional title, to be rendered offset from the main text.")
         (:definition (:class para) "para (clause-with-body)"
@@ -604,7 +601,7 @@
         (:definition (:function clause-title) "(clause-title clause-with-title) => string-or-nil"
           ""
           "Returns the clause title.  When {param clause-with-title} is a {class named-clause}, the title
-          is required and hence the value will not be {code nil}.  When {param clause-with-title} is a {class block},
+          is required and hence the value will not be {code nil}.  When {param clause-with-title} is a {class text-block},
           the title may be {code nil}.")
         (:definition (:function clause-term) "(clause-term clause-with-term) => clause-or-nil"
           ""
