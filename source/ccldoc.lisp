@@ -71,7 +71,7 @@
    ;; operators
    :include-file
    :defsection :index-section :glossary-section
-   :block :code-block :glossentry :definition
+   :text-block :code-block :glossentry :definition
    :table :row :item :para
    :clause :index :link :markup :ref :quote
    ;; macros
@@ -104,7 +104,7 @@
    #:listing #:listing-type
    #:code-block
    #:markup #:markup-type
-   #:block
+   #:text-block
    #:para
    #:term-item
    #:item

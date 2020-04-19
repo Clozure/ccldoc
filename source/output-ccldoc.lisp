@@ -21,7 +21,7 @@
   (hemlock-interface:defindent "chapter" 1)
   (hemlock-interface:defindent "defsection" 1)
   (hemlock-interface:defindent "glosssary-section" 1)
-  (hemlock-interface:defindent "block" 1)
+  (hemlock-interface:defindent "text-block" 1)
   (hemlock-interface:defindent "listing" 1)
   (hemlock-interface:defindent "table" 2)
 )
@@ -61,8 +61,8 @@
   (let ((package (slot-value section 'package)))
     `(,(default-operator section) (,(clause-title section) ,@(and package `(:package ,package))) ,@(decompile-body section))))
 
-(defmethod decompile-ccldoc ((block block))
-  `(,(default-operator block) (,(clause-title block)) ,@(decompile-body block)))
+(defmethod decompile-ccldoc ((blk text-block))
+  `(,(default-operator text-block) (,(clause-title blk)) ,@(decompile-body blk)))
 
 (defmethod decompile-ccldoc ((definition definition))
   `(,(default-operator definition) (,(dspec-type (clause-name definition))
@@ -147,7 +147,7 @@
 (flet ((set-pprint (type fn)
          (set-pprint-dispatch type fn 0 *ccldoc-pprint-dispatch*)))
 
-  (loop for sym in '(document chapter defsection glossary-section block listing)
+  (loop for sym in '(document chapter defsection glossary-section text-block listing)
     do (set-pprint `(cons (member ,sym)) #'block-like))
 
   (loop for sym in '(row)
@@ -167,7 +167,7 @@
     (:defsection 1)
     (:glossary-section 1)
     (:para 0)  ;; (:text)
-    (:block 1)
+    (:text-block 1)
     (:definition 1) ;; 
     (:glossentry 0)
     (:system 0)    ;; (:text)

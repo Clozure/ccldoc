@@ -186,8 +186,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (sb-ext:unlock-package (find-package :cl)))
 
-;;; TODO change this to a different name - defclassing CL:BLOCK is undefined behaviour
-(defclass block (clause-with-optional-title clause-with-body)
+(defclass text-block (clause-with-optional-title clause-with-body)
   ())
 
 #+sbcl

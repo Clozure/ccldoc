@@ -128,7 +128,7 @@
   (write-html (clause-body clause) stream)
   (format stream "~&</pre>~%"))
 
-(defmethod write-html ((clause block) stream)
+(defmethod write-html ((clause text-block) stream)
   (format stream "<blockquote>~%")
   (write-html (clause-body clause) stream)
   (format stream "~&</blockquote>~%"))
