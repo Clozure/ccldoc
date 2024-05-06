@@ -12,20 +12,12 @@
 ;;; See the License for the specific language governing permissions and
 ;;; limitations under the License.
 
-(defsystem "ccldoc"
+(defsystem "ccldoc-docbook"
     :author "Clozure Associates and contributors"
-    :description "create lisp documentation using s-expressions"
+    :description "DocBook output for CCLDoc"
     :license "Apache License 2.0"
-    :depends-on (
-                 #-ccl "ccl-compat")
+    :depends-on ("s-xml"
+                 "ccldoc")
     :serial t
-    :components ((:file "package")
-                 (:file "borrowed-code")
-		 (:file "utils")
-		 (:file "representation")
-		 (:file "toplevel")
-		 (:file "syntax")
-		 (:file "output-tracwiki")
-		 (:file "output-html")
-		 (:file "output-latex")
-		 (:file "output-ccldoc")))
+    :components ((:file "output-docbook")))
+

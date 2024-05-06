@@ -103,21 +103,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Patch s-xml pretty printing to not introduce spacing when not appropriate....
-
-(defvar *whitespace-allowed-tags* nil)
-
-(defmethod s-xml:print-xml-dom :around (dom (input-type (eql :lxml)) stream pretty level)
-  (when (and pretty (consp dom))
-    (let ((tag (first dom)))
-      (when (consp tag) (setq tag (car tag)))
-      (unless (member tag *whitespace-allowed-tags*)
-        (setq pretty nil))))
-  (call-next-method dom input-type stream pretty level))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; dspecs
 ;;;

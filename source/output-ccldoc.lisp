@@ -62,7 +62,7 @@
     `(,(default-operator section) (,(clause-title section) ,@(and package `(:package ,package))) ,@(decompile-body section))))
 
 (defmethod decompile-ccldoc ((blk text-block))
-  `(,(default-operator text-block) (,(clause-title blk)) ,@(decompile-body blk)))
+  `(,(default-operator blk) (,(clause-title blk)) ,@(decompile-body blk)))
 
 (defmethod decompile-ccldoc ((definition definition))
   `(,(default-operator definition) (,(dspec-type (clause-name definition))

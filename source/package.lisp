@@ -14,10 +14,6 @@
 
 (defpackage ccldoc
   (:use :cl)
-  (:import-from :alexandria
-                #:when-let* #:when-let #:if-let
-                #:starts-with-subseq)
-  (:import-from :split-sequence #:split-sequence)
   (:import-from #+:ccl :ccl
                 #-:ccl :ccl-compat
                 #:pkg-arg #:no-such-package

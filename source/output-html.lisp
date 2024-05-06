@@ -226,8 +226,8 @@
 
 ;;l This is pretty much an ad-hoc disaster.
 (defun html-formatted-signature (signature)
-  (let ((words (split-sequence #\space
-			       (cl-who:escape-string (string-downcase
+  (let ((words (simple-split #\space
+			       (escape-for-html (string-downcase
 						      signature)))))
     (with-output-to-string (s)
       (format s "<code>~a</code> " (pop words))
@@ -238,13 +238,13 @@
               ((and (char= (char w 0) #\()
                     (not (char= (char w (1- (length w))) #\))))
                (write-string " (" s)
-               (format s "<i>~a</i> " (cl-who:escape-string (string-trim "(" w))))
+               (format s "<i>~a</i> " (escape-for-html (string-trim "(" w))))
               ((and (not (char= (char w 0) #\())
                     (char= (char w (1- (length w))) #\)))
-               (format s "<i>~a</i>" (cl-who:escape-string (string-trim ")" w)))
+               (format s "<i>~a</i>" (escape-for-html (string-trim ")" w)))
                (write-string ") " s))
               (t
-               (format s "<i>~a</i> " (cl-who:escape-string w))))
+               (format s "<i>~a</i> " (escape-for-html w))))
 ))))
 
 (defmethod write-html ((clause definition) stream)
@@ -270,7 +270,7 @@
     (write-html c stream)))
 
 (defmethod write-html ((clause string) stream)
-  (write-string (cl-who:escape-string-minimal clause) stream))
+  (write-string (escape-for-html-minimal clause) stream))
 
 (defmethod write-html ((clause null) stream)
   (declare (ignore stream))

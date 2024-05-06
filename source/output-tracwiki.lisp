@@ -103,7 +103,7 @@
                    (write-char #\! stream))
                  (write-string line stream :start start :end end)
                  (- end start)))))
-      (let ((lines (split-sequence #\newline clause)))
+      (let ((lines (simple-split #\newline clause)))
         (loop for line in lines as first = t then nil
           do (unless first (wiki-newline stream))
           do (let ((start (if *wiki-inline* 0 (position-if-not #'whitespacep line)))
@@ -272,9 +272,11 @@
   (format stream "~%{{{
 #!html
 <tt><font size=\"+1\"><b>")
-  (s-xml:print-string-xml (clause-text (definition-signature clause)) stream)
+  (write-string (escape-for-html (clause-text (definition-signature clause)))
+                stream)
   (format stream "     </b></font><i>[")
-  (s-xml:print-string-xml (dspec-type-name (clause-name clause)) stream)
+  (write-string (escape-for-html (dspec-type-name (clause-name clause)))
+                stream)
   (format stream "]</i></tt>
 }}}")
   (wiki-blankline stream)
