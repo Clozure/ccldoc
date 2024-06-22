@@ -2,21 +2,25 @@
 
 CCLDoc is a system for creating Lisp documentation. It uses S-expressions to represent document structure, markup, cross references, and contents. It has a small number of basic operators, supports macros for syntax extensions, and supports a simple syntax for embedding expressions in strings for added convenience.
 
-The documentation for Clozure CL is written in CCLDoc.
+The documentation for Clozure CL is written in CCLDoc.  The documentation files themselves are included in the CCL repository (see https://github.com/Clozure/ccl/tree/master/doc/manual).
 
-To use CCLDoc to format the CCL documentation, follow these steps:
+After cloning the CCLDoc repository, load it into CCL by doing the following:
+```
+(require 'asdf)
+(push "</path/to/ccldoc>/source/" asdf:*central-registry*)
+(asdf:load-system 'ccldoc)
+```
 
-1. Install CCL.  See http://ccl.clozure.com/download.html
-2. Install Quicklisp.  See http://www.quicklisp.org
-3. Check out the CCLDoc sources into ~/quicklisp/local-projects
+At this point, you can load the CCL manaul with
+```
+(defparameter *d* (ccldoc:load-document "ccl:doc;manual;ccl.ccldoc"))
+```
 
-Now, start CCL, and do the following:
+To format the manaul, evaluate
+```
+(ccldoc:output-html *d* "ccl.html" :stylesheet "ccl:doc;manual;style.css")
+```
 
-    (load "home:quicklisp;setup")
-    (ql:quickload :ccldoc)
-    (defparameter *d* (ccldoc:load-document "ccl:doc;manual;ccl.ccldoc"))
-    (ccldoc::output-html *d* "/tmp/ccl.html" :stylesheet "ccl.css")
+You can then view the generated ccl.html file in your browser.
 
-You can then view the generated ccl.html file in your browser. The generated HTML expects to use a style file named ccl.css in the same directory.
-
-There is also a not-quite-complete LaTeX converter. To use it, do `(output-latex *d* "ccl.tex")` and then process the ccl.tex file with xelatex to produce a PDF file. The version of xelatex that comes with MacTeX 2014 works.
+There is also a not-quite-complete LaTeX converter. To use it, do `(output-latex *d* "ccl.tex")` and then process the ccl.tex file with xelatex to produce a PDF file. The version of xelatex that comes with MacTeX 2014 has worked in the past.
