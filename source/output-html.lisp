@@ -145,11 +145,10 @@
       (format stream "</div>~%"))))
 
 (defmethod write-html ((clause code-block) stream)
-  (write-string "<pre>" stream)
-  (write-string "<code>" stream)
+  (write-string "<pre><code>" stream)
   (write-html (clause-body clause) stream)
-  (write-string "</code>" stream)
-  (format stream "~&</pre>~%"))
+  (write-string "</code></pre>" stream)
+  (fresh-line stream))
 
 (defmethod write-html ((clause text-block) stream)
   (format stream "<blockquote>~%")
@@ -200,11 +199,12 @@
 	(:bullet (values "<ul>" "</ul>"))
 	(:number (values "<ol>" "</ol>"))
 	(:definition (values "<dl>" "</dl>"))
+        (:column (values "<ul style='list-style: none;'>" "</ul>"))
 	(otherwise (values "" "")))
     (write-string start-tag stream)
     (loop for item across (clause-items clause)
 	  do (progn
-	       (when (member (listing-type clause) '(:bullet :number))
+	       (when (member (listing-type clause) '(:bullet :number :column))
 		 (write-string "<li>" stream))
 	       (write-html item stream)))
     (write-string end-tag stream)
@@ -247,7 +247,7 @@
 	      stream)
   (write-string "</a>" stream))
 
-;;l This is pretty much an ad-hoc disaster.
+;;; This is pretty much an ad-hoc disaster.
 (defun html-formatted-signature (signature)
   (let ((words (simple-split #\space
 			       (escape-for-html (string-downcase
@@ -267,8 +267,7 @@
                (format s "<i>~a</i>" (escape-for-html (string-trim ")" w)))
                (write-string ") " s))
               (t
-               (format s "<i>~a</i> " (escape-for-html w))))
-))))
+               (format s "<i>~a</i> " (escape-for-html w))))))))
 
 (defmethod write-html ((clause definition) stream)
   (write-string "<div class=definition>" stream)
